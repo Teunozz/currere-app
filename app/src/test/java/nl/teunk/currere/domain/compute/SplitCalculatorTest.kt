@@ -110,4 +110,70 @@ class SplitCalculatorTest {
 
         assertEquals(totalSegmentDistance, totalSplitDistance, 1.0)
     }
+
+    @Test
+    fun `duplicate overlapping segments are deduplicated`() {
+        // Simulate two data sources recording the same 5km run
+        val sourceA = (0 until 5).map { i ->
+            segment(i * 300L, (i + 1) * 300L, 1000.0)
+        }
+        val sourceB = (0 until 5).map { i ->
+            segment(i * 300L, (i + 1) * 300L, 1000.0)
+        }
+        val segments = sourceA + sourceB
+
+        val splits = SplitCalculator.computeSplits(segments)
+
+        // Should produce 5 splits, not 10
+        assertEquals(5, splits.size)
+        splits.forEach { split ->
+            assertFalse(split.isPartial)
+            assertEquals(1000.0, split.distanceMeters, 0.01)
+            assertEquals(300.0, split.splitPaceSecondsPerKm, 1.0)
+        }
+    }
+
+    @Test
+    fun `partially overlapping segments are deduplicated`() {
+        // Source A has coarser segments, source B has finer segments in the same window
+        val segments = listOf(
+            segment(0, 300, 1000.0),    // Source A: 0-300s
+            segment(0, 150, 500.0),     // Source B: 0-150s (overlaps with A)
+            segment(150, 300, 500.0),   // Source B: 150-300s (overlaps with A)
+            segment(300, 600, 1000.0),  // Source A: 300-600s
+            segment(300, 450, 500.0),   // Source B: 300-450s (overlaps with A)
+            segment(450, 600, 500.0),   // Source B: 450-600s (overlaps with A)
+        )
+
+        val splits = SplitCalculator.computeSplits(segments)
+
+        // Should produce 2 full splits from source A's data only
+        assertEquals(2, splits.size)
+        splits.forEach { split ->
+            assertFalse(split.isPartial)
+            assertEquals(1000.0, split.distanceMeters, 0.01)
+        }
+    }
+
+    @Test
+    fun `no negative pace values with overlapping segments`() {
+        // Simulate the exact scenario from the bug: two sources for a 15km run
+        val sourceA = (0 until 15).map { i ->
+            segment(i * 312L, (i + 1) * 312L, 1000.0)
+        }
+        val sourceB = (0 until 15).map { i ->
+            segment(i * 312L, (i + 1) * 312L, 1000.0)
+        }
+        val segments = sourceA + sourceB
+
+        val splits = SplitCalculator.computeSplits(segments)
+
+        assertEquals(15, splits.size)
+        splits.forEach { split ->
+            assertTrue(
+                "Pace should be positive but was ${split.splitPaceSecondsPerKm}",
+                split.splitPaceSecondsPerKm > 0,
+            )
+        }
+    }
 }

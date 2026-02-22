@@ -17,6 +17,25 @@ data class DistanceSegment(
 object SplitCalculator {
 
     /**
+     * Remove overlapping distance segments that occur when multiple data sources
+     * (e.g. phone + watch, or Google Fit + native tracker) record the same run.
+     * Keeps the first segment for each time window and skips any segment whose
+     * start time falls before the previous segment's end time.
+     */
+    private fun deduplicateSegments(segments: List<DistanceSegment>): List<DistanceSegment> {
+        if (segments.isEmpty()) return segments
+        val sorted = segments.sortedBy { it.startTime }
+        val result = mutableListOf(sorted.first())
+        for (i in 1 until sorted.size) {
+            val current = sorted[i]
+            val last = result.last()
+            if (current.startTime < last.endTime) continue
+            result.add(current)
+        }
+        return result
+    }
+
+    /**
      * Compute per-km splits from sorted incremental distance segments.
      *
      * Walks through segments accumulating distance. When cumulative distance
@@ -26,7 +45,7 @@ object SplitCalculator {
     fun computeSplits(segments: List<DistanceSegment>): List<PaceSplit> {
         if (segments.isEmpty()) return emptyList()
 
-        val sorted = segments.sortedBy { it.startTime }
+        val sorted = deduplicateSegments(segments)
         val splits = mutableListOf<PaceSplit>()
 
         var cumulativeDistance = 0.0
