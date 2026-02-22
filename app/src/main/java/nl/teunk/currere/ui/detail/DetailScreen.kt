@@ -141,7 +141,6 @@ fun DetailContent(
         // Heart Rate Chart (hidden when no data)
         if (detail.heartRateSamples.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
-            SectionHeader("Heart Rate")
             HeartRateChart(
                 samples = detail.heartRateSamples,
                 sessionStartTime = session.startTime,
@@ -151,7 +150,6 @@ fun DetailContent(
         // Pace Chart
         if (detail.paceSamples.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
-            SectionHeader("Pace")
             PaceChart(
                 samples = detail.paceSamples,
                 sessionStartTime = session.startTime,

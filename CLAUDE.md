@@ -26,4 +26,9 @@ Kotlin 2.0.21: Follow standard conventions
 - 001-run-diary: Added Kotlin 2.0.21 + Jetpack Compose (BOM 2025.01.01), Material 3, Health Connect connect-client 1.1.0, Vico 2.x (charting), Navigation Compose 2.8.x with Kotlin Serialization
 
 <!-- MANUAL ADDITIONS START -->
+
+## Tool Restrictions
+
+- **Never use the Dart MCP tools** in this project. This is a Kotlin/Android project, not a Dart/Flutter project.
+
 <!-- MANUAL ADDITIONS END -->

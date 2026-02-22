@@ -18,6 +18,10 @@ val TextPrimary = Color.White
 val TextSecondary = Color(0xFF9E9E9E)
 val TextTertiary = Color(0xFF616161)
 
+// Chart
+val ChartHeartRate = Color(0xFFE57373)
+val ChartPace = Color(0xFF64B5F6)
+
 // Functional
 val ErrorRed = Color(0xFFEF5350)
 val SplitFast = Color(0xFF66BB6A)

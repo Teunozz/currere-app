@@ -7,6 +7,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -14,8 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunDetail
@@ -39,19 +45,19 @@ fun StatsRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StatCard(
-                icon = android.R.drawable.ic_menu_mapmode,
+                icon = Icons.Filled.Straighten,
                 label = "Distance",
                 value = "${StatsAggregator.formatDistanceKm(session.distanceMeters)} km",
                 modifier = Modifier.weight(1f),
             )
             StatCard(
-                icon = android.R.drawable.ic_menu_recent_history,
+                icon = Icons.Filled.Timer,
                 label = "Time",
                 value = StatsAggregator.formatDuration(session.activeDuration),
                 modifier = Modifier.weight(1f),
             )
             StatCard(
-                icon = android.R.drawable.ic_menu_send,
+                icon = Icons.Filled.Speed,
                 label = "Pace",
                 value = session.averagePaceSecondsPerKm?.let {
                     "${StatsAggregator.formatPace(it)}/km"
@@ -66,13 +72,13 @@ fun StatsRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StatCard(
-                icon = android.R.drawable.ic_menu_myplaces,
+                icon = Icons.Filled.FavoriteBorder,
                 label = "Avg HR",
                 value = session.averageHeartRateBpm?.let { "$it bpm" } ?: "—",
                 modifier = Modifier.weight(1f),
             )
             StatCard(
-                icon = android.R.drawable.ic_menu_directions,
+                icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
                 label = "Steps",
                 value = "%,d".format(detail.totalSteps),
                 modifier = Modifier.weight(1f),
@@ -83,7 +89,7 @@ fun StatsRow(
 
 @Composable
 private fun StatCard(
-    icon: Int,
+    icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
@@ -100,7 +106,7 @@ private fun StatCard(
             modifier = Modifier.padding(12.dp),
         ) {
             Icon(
-                painter = painterResource(icon),
+                imageVector = icon,
                 contentDescription = label,
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.primary,
