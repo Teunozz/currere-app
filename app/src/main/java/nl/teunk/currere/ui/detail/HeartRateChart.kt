@@ -32,10 +32,12 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.continuous
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
@@ -60,14 +62,49 @@ fun HeartRateChart(
 
     val avgHr = samples.map { it.bpm }.average().toLong()
 
+    // Downsample: 1 point per minute (average BPM per 60s bucket)
+    val downsampled = remember(samples, sessionStartTime) {
+        samples
+            .groupBy { Duration.between(sessionStartTime, it.time).seconds / 60 }
+            .entries
+            .sortedBy { it.key }
+            .map { (minuteBucket, bucketSamples) ->
+                minuteBucket * 60L to bucketSamples.map { it.bpm }.average()
+            }
+    }
+
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
             series(
-                x = samples.map { Duration.between(sessionStartTime, it.time).seconds },
-                y = samples.map { it.bpm },
+                x = downsampled.map { it.first },
+                y = downsampled.map { it.second },
             )
         }
     )
+
+    // Y-axis range: centered on average, padded beyond min/max
+    val hrValues = remember(downsampled) { downsampled.map { it.second } }
+    val rangeProvider = remember(hrValues) {
+        val min = hrValues.min()
+        val max = hrValues.max()
+        val avg = hrValues.average()
+        val padding = 5.0
+        val halfRange = maxOf(avg - min, max - avg) + padding
+        CartesianLayerRangeProvider.fixed(minY = avg - halfRange, maxY = avg + halfRange)
+    }
+
+    val totalDurationMinutes = remember(downsampled) {
+        if (downsampled.isEmpty()) 0L else downsampled.last().first / 60
+    }
+    val labelSpacingMinutes = remember(totalDurationMinutes) {
+        when {
+            totalDurationMinutes <= 10 -> 2
+            totalDurationMinutes <= 30 -> 5
+            totalDurationMinutes <= 60 -> 10
+            totalDurationMinutes <= 120 -> 15
+            else -> 30
+        }
+    }
 
     val lineColor = ChartHeartRate
 
@@ -139,9 +176,13 @@ fun HeartRateChart(
                             ),
                         )
                     ),
+                    rangeProvider = rangeProvider,
                 ),
                 endAxis = VerticalAxis.rememberEnd(
                     label = axisLabel,
+                    valueFormatter = remember {
+                        CartesianValueFormatter { _, value, _ -> "${value.toLong()}" }
+                    },
                     guideline = gridLine,
                     tick = null,
                     line = null,
@@ -153,9 +194,16 @@ fun HeartRateChart(
                     guideline = null,
                     tick = null,
                     line = null,
+                    itemPlacer = remember(labelSpacingMinutes) {
+                        HorizontalAxis.ItemPlacer.aligned(
+                            spacing = { labelSpacingMinutes },
+                            addExtremeLabelPadding = true,
+                        )
+                    },
                 ),
             ),
             model = model,
+            scrollState = rememberVicoScrollState(scrollEnabled = false),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)

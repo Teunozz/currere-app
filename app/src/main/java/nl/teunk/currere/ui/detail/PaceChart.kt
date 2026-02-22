@@ -32,10 +32,12 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.continuous
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
@@ -67,14 +69,39 @@ fun PaceChart(
     val yValues = samples.map { -it.secondsPerKm }
     val splitYValue = yValues.min() - 50.0
 
+    val xValues = samples.map { Duration.between(sessionStartTime, it.time).seconds }
+
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
             series(
-                x = samples.map { Duration.between(sessionStartTime, it.time).seconds },
+                x = xValues,
                 y = yValues,
             )
         }
     )
+
+    // Y-axis range: centered on average, padded beyond min/max
+    val rangeProvider = remember(yValues) {
+        val min = yValues.min()
+        val max = yValues.max()
+        val avg = yValues.average()
+        val padding = 20.0 // ~20 seconds/km padding
+        val halfRange = maxOf(avg - min, max - avg) + padding
+        CartesianLayerRangeProvider.fixed(minY = avg - halfRange, maxY = avg + halfRange)
+    }
+
+    val totalDurationMinutes = remember(xValues) {
+        if (xValues.isEmpty()) 0L else xValues.last() / 60
+    }
+    val labelSpacingMinutes = remember(totalDurationMinutes) {
+        when {
+            totalDurationMinutes <= 10 -> 2
+            totalDurationMinutes <= 30 -> 5
+            totalDurationMinutes <= 60 -> 10
+            totalDurationMinutes <= 120 -> 15
+            else -> 30
+        }
+    }
 
     val lineColor = ChartPace
 
@@ -156,6 +183,7 @@ fun PaceChart(
                             ),
                         )
                     ),
+                    rangeProvider = rangeProvider,
                 ),
                 endAxis = VerticalAxis.rememberEnd(
                     label = axisLabel,
@@ -171,9 +199,16 @@ fun PaceChart(
                     guideline = null,
                     tick = null,
                     line = null,
+                    itemPlacer = remember(labelSpacingMinutes) {
+                        HorizontalAxis.ItemPlacer.aligned(
+                            spacing = { labelSpacingMinutes },
+                            addExtremeLabelPadding = true,
+                        )
+                    },
                 ),
             ),
             model = model,
+            scrollState = rememberVicoScrollState(scrollEnabled = false),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
