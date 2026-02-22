@@ -10,17 +10,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.PaceSplit
+import nl.teunk.currere.ui.preview.SampleSplits
+import nl.teunk.currere.ui.theme.CurrereTheme
 import nl.teunk.currere.ui.theme.SplitFast
 import nl.teunk.currere.ui.theme.SplitSlow
 
@@ -35,41 +40,50 @@ fun SplitsTable(
     val maxPace = splits.maxOf { it.splitPaceSecondsPerKm }
     val paceRange = (maxPace - minPace).coerceAtLeast(1.0)
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "Km",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.width(40.dp),
-            )
-            Text(
-                text = "Pace",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.width(56.dp),
-            )
-            Box(Modifier.weight(1f))
-            Text(
-                text = "Time",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.width(64.dp),
-            )
-        }
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "Km",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.width(40.dp),
+                )
+                Text(
+                    text = "Pace",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.width(56.dp),
+                )
+                Box(Modifier.weight(1f))
+                Text(
+                    text = "Time",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.width(64.dp),
+                )
+            }
 
-        HorizontalDivider()
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-        splits.forEach { split ->
-            SplitRow(
-                split = split,
-                minPace = minPace,
-                paceRange = paceRange,
-            )
-            HorizontalDivider()
+            splits.forEach { split ->
+                SplitRow(
+                    split = split,
+                    minPace = minPace,
+                    paceRange = paceRange,
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
         }
     }
 }
@@ -123,6 +137,17 @@ private fun SplitRow(
             text = StatsAggregator.formatDuration(split.cumulativeDuration),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.width(64.dp),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun SplitsTablePreview() {
+    CurrereTheme {
+        SplitsTable(
+            splits = SampleSplits,
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

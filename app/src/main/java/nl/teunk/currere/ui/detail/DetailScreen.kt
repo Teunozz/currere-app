@@ -19,13 +19,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import nl.teunk.currere.domain.compute.StatsAggregator
+import nl.teunk.currere.domain.model.RunDetail
+import nl.teunk.currere.ui.preview.SampleRunDetail
+import nl.teunk.currere.ui.theme.CurrereTheme
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -61,6 +65,11 @@ fun DetailScreen(
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                ),
             )
         }
     ) { innerPadding ->
@@ -91,64 +100,73 @@ fun DetailScreen(
             }
 
             is DetailUiState.Success -> {
-                val detail = state.detail
-                val session = detail.session
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                ) {
-                    // Header
-                    Text(
-                        text = dateFormatter.format(session.startTime),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Text(
-                        text = "${timeFormatter.format(session.startTime)} – ${timeFormatter.format(session.endTime)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    // Stats
-                    StatsRow(detail = detail)
-
-                    // Heart Rate Chart (hidden when no data)
-                    if (detail.heartRateSamples.isNotEmpty()) {
-                        Spacer(Modifier.height(24.dp))
-                        SectionHeader("Heart Rate")
-                        HeartRateChart(
-                            samples = detail.heartRateSamples,
-                            sessionStartTime = session.startTime,
-                        )
-                    }
-
-                    // Pace Chart
-                    if (detail.paceSamples.isNotEmpty()) {
-                        Spacer(Modifier.height(24.dp))
-                        SectionHeader("Pace")
-                        PaceChart(
-                            samples = detail.paceSamples,
-                            sessionStartTime = session.startTime,
-                            averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
-                        )
-                    }
-
-                    // Splits Table
-                    if (detail.splits.isNotEmpty()) {
-                        Spacer(Modifier.height(24.dp))
-                        SectionHeader("Splits")
-                        SplitsTable(splits = detail.splits)
-                    }
-
-                    Spacer(Modifier.height(32.dp))
-                }
+                DetailContent(
+                    detail = state.detail,
+                    modifier = Modifier.padding(innerPadding),
+                )
             }
         }
+    }
+}
+
+@Composable
+fun DetailContent(
+    detail: RunDetail,
+    modifier: Modifier = Modifier,
+) {
+    val session = detail.session
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+    ) {
+        // Header
+        Text(
+            text = dateFormatter.format(session.startTime),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            text = "${timeFormatter.format(session.startTime)} – ${timeFormatter.format(session.endTime)}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        // Stats
+        StatsRow(detail = detail)
+
+        // Heart Rate Chart (hidden when no data)
+        if (detail.heartRateSamples.isNotEmpty()) {
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Heart Rate")
+            HeartRateChart(
+                samples = detail.heartRateSamples,
+                sessionStartTime = session.startTime,
+            )
+        }
+
+        // Pace Chart
+        if (detail.paceSamples.isNotEmpty()) {
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Pace")
+            PaceChart(
+                samples = detail.paceSamples,
+                sessionStartTime = session.startTime,
+                averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
+            )
+        }
+
+        // Splits Table
+        if (detail.splits.isNotEmpty()) {
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Splits")
+            SplitsTable(splits = detail.splits)
+        }
+
+        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -156,9 +174,17 @@ fun DetailScreen(
 private fun SectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.titleLarge,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
     )
+}
+
+@Preview
+@Composable
+private fun DetailContentPreview() {
+    CurrereTheme {
+        DetailContent(detail = SampleRunDetail)
+    }
 }

@@ -2,12 +2,23 @@ package nl.teunk.currere.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val CurrereBlue = Color(0xFF1565C0)
-val CurrereBlueDark = Color(0xFF0D47A1)
-val CurrereBlueLight = Color(0xFF42A5F5)
-val CurrereOrange = Color(0xFFEF6C00)
-val CurrereGreen = Color(0xFF2E7D32)
-val CurrereRed = Color(0xFFC62828)
+// Dark theme palette
+val DarkBackground = Color(0xFF0D0D0D)
+val DarkSurface = Color(0xFF1A1A1A)
+val DarkSurfaceVariant = Color(0xFF242424)
+val DarkOutline = Color(0xFF3A3A3A)
+val DarkOutlineVariant = Color(0xFF2E2E2E)
 
-val SplitFast = Color(0xFF4CAF50)
+// Accent
+val LimeGreen = Color(0xFFCDDC39)
+val LimeGreenDark = Color(0xFF99AA00)
+
+// Text
+val TextPrimary = Color.White
+val TextSecondary = Color(0xFF9E9E9E)
+val TextTertiary = Color(0xFF616161)
+
+// Functional
+val ErrorRed = Color(0xFFEF5350)
+val SplitFast = Color(0xFF66BB6A)
 val SplitSlow = Color(0xFFEF5350)

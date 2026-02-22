@@ -1,7 +1,6 @@
 package nl.teunk.currere.ui.permission
 
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.ui.theme.CurrereTheme
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
@@ -66,6 +67,22 @@ fun PermissionScreen(
         }
     }
 
+    PermissionScreenContent(
+        permissionDenied = permissionDenied,
+        onOpenSettings = {
+            val intent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
+            context.startActivity(intent)
+        },
+        onTryAgain = { permissionLauncher.launch(HEALTH_PERMISSIONS) },
+    )
+}
+
+@Composable
+fun PermissionScreenContent(
+    permissionDenied: Boolean,
+    onOpenSettings: () -> Unit,
+    onTryAgain: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,22 +117,27 @@ fun PermissionScreen(
         Spacer(Modifier.height(32.dp))
 
         if (permissionDenied) {
-            Button(
-                onClick = {
-                    val intent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
-                    context.startActivity(intent)
-                }
-            ) {
+            Button(onClick = onOpenSettings) {
                 Text("Open Health Connect settings")
             }
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(
-                onClick = { permissionLauncher.launch(HEALTH_PERMISSIONS) }
-            ) {
+            OutlinedButton(onClick = onTryAgain) {
                 Text("Try again")
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PermissionScreenDeniedPreview() {
+    CurrereTheme {
+        PermissionScreenContent(
+            permissionDenied = true,
+            onOpenSettings = {},
+            onTryAgain = {},
+        )
     }
 }
