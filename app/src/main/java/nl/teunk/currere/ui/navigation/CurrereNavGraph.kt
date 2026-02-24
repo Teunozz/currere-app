@@ -23,6 +23,11 @@ import nl.teunk.currere.ui.diary.DiaryScreen
 import nl.teunk.currere.ui.diary.DiaryViewModel
 import nl.teunk.currere.ui.permission.HEALTH_PERMISSIONS
 import nl.teunk.currere.ui.permission.PermissionScreen
+import nl.teunk.currere.ui.scanner.QrScannerScreen
+import nl.teunk.currere.ui.settings.SettingsScreen
+import nl.teunk.currere.ui.settings.SettingsViewModel
+import nl.teunk.currere.ui.setup.ManualSetupScreen
+import nl.teunk.currere.ui.setup.SetupViewModel
 import java.time.Instant
 
 @Composable
@@ -61,6 +66,11 @@ fun CurrereNavGraph() {
 
     val startDestination: Any = if (hasPermissions) DiaryRoute else PermissionRoute
 
+    // Shared SetupViewModel for QR scanner and manual setup flows
+    val setupViewModel: SetupViewModel = viewModel {
+        SetupViewModel(app.apiClient, app.credentialsManager, app)
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -77,7 +87,12 @@ fun CurrereNavGraph() {
 
         composable<DiaryRoute> {
             val diaryViewModel: DiaryViewModel = viewModel {
-                DiaryViewModel(app.healthConnectSource)
+                DiaryViewModel(
+                    healthConnectSource = app.healthConnectSource,
+                    syncStatusStore = app.syncStatusStore,
+                    syncRepository = app.syncRepository,
+                    appContext = app,
+                )
             }
             DiaryScreen(
                 viewModel = diaryViewModel,
@@ -89,6 +104,9 @@ fun CurrereNavGraph() {
                             endTimeEpochMilli = session.endTime.toEpochMilli(),
                         )
                     )
+                },
+                onSettingsClick = {
+                    navController.navigate(SettingsRoute)
                 },
             )
         }
@@ -106,6 +124,42 @@ fun CurrereNavGraph() {
             DetailScreen(
                 viewModel = detailViewModel,
                 onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<SettingsRoute> {
+            val settingsViewModel: SettingsViewModel = viewModel {
+                SettingsViewModel(app.credentialsManager, app.syncStatusStore, app)
+            }
+            SettingsScreen(
+                viewModel = settingsViewModel,
+                onBack = { navController.popBackStack() },
+                onScanQrCode = { navController.navigate(QrScannerRoute) },
+                onManualSetup = { navController.navigate(ManualSetupRoute) },
+            )
+        }
+
+        composable<QrScannerRoute> {
+            QrScannerScreen(
+                onQrScanned = { baseUrl, token ->
+                    setupViewModel.connectWithCredentials(baseUrl, token)
+                    navController.navigate(ManualSetupRoute) {
+                        popUpTo<SettingsRoute>()
+                    }
+                },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<ManualSetupRoute> {
+            ManualSetupScreen(
+                viewModel = setupViewModel,
+                onBack = { navController.popBackStack() },
+                onConnected = {
+                    navController.navigate(SettingsRoute) {
+                        popUpTo<DiaryRoute>()
+                    }
+                },
             )
         }
     }
