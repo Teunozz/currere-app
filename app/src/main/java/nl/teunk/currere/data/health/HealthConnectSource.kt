@@ -50,6 +50,43 @@ class HealthConnectSource(
     }
 
     /**
+     * Read running sessions after the given instant, paginated.
+     */
+    suspend fun readRunningSessionsAfter(after: Instant): List<ExerciseSessionRecord> =
+        withContext(Dispatchers.IO) {
+            val allRecords = mutableListOf<ExerciseSessionRecord>()
+            var pageToken: String? = null
+
+            do {
+                val response = client.readRecords(
+                    ReadRecordsRequest(
+                        ExerciseSessionRecord::class,
+                        timeRangeFilter = TimeRangeFilter.after(after),
+                        pageToken = pageToken,
+                    )
+                )
+                allRecords.addAll(response.records)
+                pageToken = response.pageToken
+            } while (pageToken != null)
+
+            allRecords
+                .filter { it.exerciseType == ExerciseSessionRecord.EXERCISE_TYPE_RUNNING }
+                .sortedByDescending { it.startTime }
+        }
+
+    /**
+     * Load sessions after the given instant with their summary stats.
+     */
+    suspend fun loadRunSessionsAfter(after: Instant): List<RunSession> =
+        withContext(Dispatchers.IO) {
+            val sessions = readRunningSessionsAfter(after)
+            sessions.map { session ->
+                val agg = aggregateSessionStats(session.startTime, session.endTime)
+                Mappers.toRunSession(session, agg)
+            }
+        }
+
+    /**
      * Aggregate summary stats for a single session.
      */
     suspend fun aggregateSessionStats(

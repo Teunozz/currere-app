@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -69,6 +70,33 @@ dependencies {
 
     // Vico Charts
     implementation(libs.vico.compose.m3)
+
+    // Networking
+    implementation(libs.retrofit.core)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+    implementation(libs.retrofit.kotlinx.serialization)
+
+    // DataStore + Encryption
+    implementation(libs.datastore)
+    implementation(libs.datastore.preferences)
+    implementation(libs.tink.android)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // CameraX + ML Kit
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.camerax.mlkit)
+    implementation(libs.mlkit.barcode)
 
     // Testing
     testImplementation(libs.junit)

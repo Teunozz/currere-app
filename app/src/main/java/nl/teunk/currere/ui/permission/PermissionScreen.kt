@@ -42,6 +42,7 @@ val HEALTH_PERMISSIONS = setOf(
     HealthPermission.getReadPermission(StepsRecord::class),
     HealthPermission.getReadPermission(HeartRateRecord::class),
     HealthPermission.getReadPermission(SpeedRecord::class),
+    HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY,
 )
 
 @Composable

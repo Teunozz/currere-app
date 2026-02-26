@@ -14,3 +14,12 @@ data class DetailRoute(
     val startTimeEpochMilli: Long,
     val endTimeEpochMilli: Long,
 )
+
+@Serializable
+object SettingsRoute
+
+@Serializable
+object QrScannerRoute
+
+@Serializable
+object ManualSetupRoute
