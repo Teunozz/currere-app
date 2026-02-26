@@ -88,7 +88,7 @@ fun CurrereNavGraph() {
         composable<DiaryRoute> {
             val diaryViewModel: DiaryViewModel = viewModel {
                 DiaryViewModel(
-                    healthConnectSource = app.healthConnectSource,
+                    runSessionRepository = app.runSessionRepository,
                     syncStatusStore = app.syncStatusStore,
                     syncRepository = app.syncRepository,
                     appContext = app,

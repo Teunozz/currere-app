@@ -10,10 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import nl.teunk.currere.data.health.HealthConnectSource
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.sync.SyncRecord
 import nl.teunk.currere.data.sync.SyncRepository
-import nl.teunk.currere.data.sync.SyncResult
 import nl.teunk.currere.data.sync.SyncStatusStore
 import nl.teunk.currere.data.sync.SyncWorker
 import nl.teunk.currere.domain.model.RunSession
@@ -30,31 +29,33 @@ sealed interface DiaryUiState {
 }
 
 class DiaryViewModel(
-    private val healthConnectSource: HealthConnectSource,
+    private val runSessionRepository: RunSessionRepository,
     private val syncStatusStore: SyncStatusStore,
     private val syncRepository: SyncRepository,
     private val appContext: Context,
 ) : ViewModel() {
 
-    private val _sessions = MutableStateFlow<List<RunSession>>(emptyList())
-    private val _isLoading = MutableStateFlow(true)
+    private val _isInitialLoad = MutableStateFlow(true)
 
     val uiState: StateFlow<DiaryUiState> = combine(
-        _sessions,
-        _isLoading,
+        runSessionRepository.sessions,
+        _isInitialLoad,
         syncStatusStore.syncMap,
-    ) { sessions, isLoading, syncMap ->
+    ) { sessions, isInitialLoad, syncMap ->
         when {
-            isLoading -> DiaryUiState.Loading
+            isInitialLoad && sessions.isEmpty() -> DiaryUiState.Loading
             sessions.isEmpty() -> DiaryUiState.Empty
-            else -> DiaryUiState.Success(
-                sessions.map { session ->
-                    DiaryRunItem(
-                        session = session,
-                        syncRecord = syncMap[session.id],
-                    )
-                }
-            )
+            else -> {
+                _isInitialLoad.value = false
+                DiaryUiState.Success(
+                    sessions.map { session ->
+                        DiaryRunItem(
+                            session = session,
+                            syncRecord = syncMap[session.id],
+                        )
+                    }
+                )
+            }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DiaryUiState.Loading)
 
@@ -65,35 +66,32 @@ class DiaryViewModel(
     val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
 
     init {
-        loadSessions()
+        viewModelScope.launch {
+            try {
+                runSessionRepository.refreshIncremental()
+                _isInitialLoad.value = false
+                SyncWorker.enqueueOneTime(appContext)
+            } catch (e: Exception) {
+                _isInitialLoad.value = false
+            }
+        }
     }
 
     fun refresh() {
         _isRefreshing.value = true
-        loadSessions()
-    }
-
-    fun clearSyncMessage() {
-        _syncMessage.value = null
-    }
-
-    private fun loadSessions() {
         viewModelScope.launch {
             try {
-                val sessions = healthConnectSource.loadRunSessions()
-                _sessions.value = sessions
-                _isLoading.value = false
-
-                // Trigger background sync
-                if (sessions.isNotEmpty()) {
-                    SyncWorker.enqueueOneTime(appContext)
-                }
+                runSessionRepository.refreshFull()
+                SyncWorker.enqueueOneTime(appContext)
             } catch (e: Exception) {
-                _sessions.value = emptyList()
-                _isLoading.value = false
+                // Cached data remains visible
             } finally {
                 _isRefreshing.value = false
             }
         }
+    }
+
+    fun clearSyncMessage() {
+        _syncMessage.value = null
     }
 }

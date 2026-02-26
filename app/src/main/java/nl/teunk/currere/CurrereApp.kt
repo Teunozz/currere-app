@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.health.connect.client.HealthConnectClient
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.api.ApiClient
 import nl.teunk.currere.data.credentials.CredentialsManager
+import nl.teunk.currere.data.db.CurrereDatabase
 import nl.teunk.currere.data.health.HealthConnectSource
 import nl.teunk.currere.data.sync.SyncRepository
 import nl.teunk.currere.data.sync.SyncStatusStore
@@ -15,6 +17,14 @@ class CurrereApp : Application() {
 
     val healthConnectSource: HealthConnectSource by lazy {
         HealthConnectSource(HealthConnectClient.getOrCreate(this))
+    }
+
+    val database: CurrereDatabase by lazy {
+        CurrereDatabase.getInstance(this)
+    }
+
+    val runSessionRepository: RunSessionRepository by lazy {
+        RunSessionRepository(database.runSessionDao(), healthConnectSource)
     }
 
     val credentialsManager: CredentialsManager by lazy {

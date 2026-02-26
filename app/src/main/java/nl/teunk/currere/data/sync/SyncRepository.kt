@@ -99,7 +99,7 @@ class SyncRepository(
         return RunRequest(
             startTime = isoFormatter.format(session.startTime.atOffset(ZoneOffset.UTC)),
             endTime = isoFormatter.format(session.endTime.atOffset(ZoneOffset.UTC)),
-            distanceKm = session.distanceMeters / 1000.0,
+            distanceKm = (session.distanceMeters / 1000.0).coerceAtLeast(0.001),
             durationSeconds = session.activeDuration.seconds,
             avgPaceSecondsPerKm = session.averagePaceSecondsPerKm?.toLong(),
             avgHeartRate = session.averageHeartRateBpm,
@@ -126,7 +126,7 @@ class SyncRepository(
         return RunRequest(
             startTime = isoFormatter.format(startTime.atOffset(ZoneOffset.UTC)),
             endTime = isoFormatter.format(endTime.atOffset(ZoneOffset.UTC)),
-            distanceKm = distanceMeters / 1000.0,
+            distanceKm = (distanceMeters / 1000.0).coerceAtLeast(0.001),
             durationSeconds = activeDuration.seconds,
             avgPaceSecondsPerKm = averagePaceSecondsPerKm?.toLong(),
             avgHeartRate = averageHeartRateBpm,
