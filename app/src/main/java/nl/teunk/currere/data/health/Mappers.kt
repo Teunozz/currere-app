@@ -6,7 +6,6 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsRecord
-import nl.teunk.currere.domain.compute.DistanceSegment
 import nl.teunk.currere.domain.compute.PaceCalculator
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.HeartRateSample
@@ -56,16 +55,6 @@ object Mappers {
                 sample.time to sample.speed.inMetersPerSecond
             }
         }.sortedBy { it.first }
-    }
-
-    fun toDistanceSegments(records: List<DistanceRecord>): List<DistanceSegment> {
-        return records.map { record ->
-            DistanceSegment(
-                startTime = record.startTime,
-                endTime = record.endTime,
-                distanceMeters = record.distance.inMeters.coerceAtLeast(0.0),
-            )
-        }.sortedBy { it.startTime }
     }
 
     fun totalSteps(aggregation: AggregationResult): Long {

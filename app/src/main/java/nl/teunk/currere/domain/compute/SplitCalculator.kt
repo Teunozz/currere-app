@@ -4,85 +4,78 @@ import nl.teunk.currere.domain.model.PaceSplit
 import java.time.Duration
 import java.time.Instant
 
-/**
- * A distance segment from Health Connect, representing incremental distance
- * covered between startTime and endTime.
- */
-data class DistanceSegment(
-    val startTime: Instant,
-    val endTime: Instant,
-    val distanceMeters: Double,
-)
-
 object SplitCalculator {
 
     /**
-     * Remove overlapping distance segments that occur when multiple data sources
-     * (e.g. phone + watch, or Google Fit + native tracker) record the same run.
-     * Keeps the first segment for each time window and skips any segment whose
-     * start time falls before the previous segment's end time.
-     */
-    private fun deduplicateSegments(segments: List<DistanceSegment>): List<DistanceSegment> {
-        if (segments.isEmpty()) return segments
-        val sorted = segments.sortedBy { it.startTime }
-        val result = mutableListOf(sorted.first())
-        for (i in 1 until sorted.size) {
-            val current = sorted[i]
-            val last = result.last()
-            if (current.startTime < last.endTime) continue
-            result.add(current)
-        }
-        return result
-    }
-
-    /**
-     * Compute per-km splits from sorted incremental distance segments.
+     * Compute per-km splits from speed samples using trapezoidal integration,
+     * calibrated against the known GPS-based total distance.
      *
-     * Walks through segments accumulating distance. When cumulative distance
-     * crosses a km boundary, interpolates the crossing time and records the split.
-     * The final partial split (if any) covers remaining distance after the last full km.
+     * @param speedSamples list of (timestamp, speed in m/s) pairs
+     * @param totalDistanceMeters known total distance to calibrate against
+     * @param sessionStartTime actual session start to anchor km1 timing
      */
-    fun computeSplits(segments: List<DistanceSegment>): List<PaceSplit> {
-        if (segments.isEmpty()) return emptyList()
+    fun computeSplits(
+        speedSamples: List<Pair<Instant, Double>>,
+        totalDistanceMeters: Double? = null,
+        sessionStartTime: Instant? = null,
+    ): List<PaceSplit> {
+        if (speedSamples.size < 2) return emptyList()
 
-        val sorted = deduplicateSegments(segments)
+        val sorted = speedSamples.sortedBy { it.first }
+
+        // Prepend synthetic zero-velocity sample at session start if it precedes
+        // the first speed sample, to anchor km1 timing correctly.
+        val corrected = if (sessionStartTime != null && sessionStartTime < sorted.first().first) {
+            listOf(sessionStartTime to 0.0) + sorted
+        } else {
+            sorted
+        }
+
+        // First pass: compute raw integrated distance to determine scale factor
+        val scaleFactor = if (totalDistanceMeters != null && totalDistanceMeters > 0) {
+            val rawTotal = integrateDistance(corrected)
+            if (rawTotal > 0) totalDistanceMeters / rawTotal else 1.0
+        } else {
+            1.0
+        }
+
+        // Second pass: find km boundaries using scaled distances
         val splits = mutableListOf<PaceSplit>()
-
         var cumulativeDistance = 0.0
-        var splitStartTime = sorted.first().startTime
-        var splitStartDistance = 0.0
+        var splitStartTime = corrected.first().first
         var currentKm = 1
         var cumulativeDuration = Duration.ZERO
 
-        for (segment in sorted) {
-            val segmentDurationMs = Duration.between(segment.startTime, segment.endTime).toMillis()
-            val prevCumulative = cumulativeDistance
-            cumulativeDistance += segment.distanceMeters
+        for (i in 0 until corrected.size - 1) {
+            val (t0, _) = corrected[i]
+            val (t1, v1) = corrected[i + 1]
+            val intervalMs = Duration.between(t0, t1).toMillis()
+            if (intervalMs <= 0) continue
 
-            // Check if this segment crosses one or more km boundaries
+            val intervalSeconds = intervalMs / 1000.0
+            val avgSpeed = (corrected[i].second + v1) / 2.0
+            val intervalDistance = avgSpeed * intervalSeconds * scaleFactor
+            val prevCumulative = cumulativeDistance
+            cumulativeDistance += intervalDistance
+
             while (cumulativeDistance >= currentKm * 1000.0) {
                 val boundaryDistance = currentKm * 1000.0
-                val distanceIntoSegment = boundaryDistance - prevCumulative
-                val fraction = if (segment.distanceMeters > 0) {
-                    distanceIntoSegment / segment.distanceMeters
+                val distanceIntoBoundary = boundaryDistance - prevCumulative
+                val fraction = if (intervalDistance > 0) {
+                    distanceIntoBoundary / intervalDistance
                 } else {
                     0.0
                 }
-                val boundaryTime = segment.startTime.plusMillis((segmentDurationMs * fraction).toLong())
+                val boundaryTime = t0.plusMillis((intervalMs * fraction).toLong())
 
                 val splitDuration = Duration.between(splitStartTime, boundaryTime)
                 cumulativeDuration = cumulativeDuration.plus(splitDuration)
-                val splitDistance = 1000.0
-                val splitPace = if (splitDistance > 0) {
-                    splitDuration.toMillis() / 1000.0 / (splitDistance / 1000.0)
-                } else {
-                    0.0
-                }
+                val splitPace = splitDuration.toMillis() / 1000.0 // seconds for 1 km
 
                 splits.add(
                     PaceSplit(
                         kilometerNumber = currentKm,
-                        distanceMeters = splitDistance,
+                        distanceMeters = 1000.0,
                         splitDuration = splitDuration,
                         splitPaceSecondsPerKm = splitPace,
                         cumulativeDuration = cumulativeDuration,
@@ -91,16 +84,15 @@ object SplitCalculator {
                 )
 
                 splitStartTime = boundaryTime
-                splitStartDistance = boundaryDistance
                 currentKm++
             }
         }
 
-        // Final partial split (remaining distance after last full km)
+        // Final partial split
         val remainingDistance = cumulativeDistance - (currentKm - 1) * 1000.0
-        if (remainingDistance > 0.1) { // Threshold to avoid floating point noise
-            val lastSegmentEnd = sorted.last().endTime
-            val splitDuration = Duration.between(splitStartTime, lastSegmentEnd)
+        if (remainingDistance > 0.1) {
+            val lastTime = corrected.last().first
+            val splitDuration = Duration.between(splitStartTime, lastTime)
             cumulativeDuration = cumulativeDuration.plus(splitDuration)
             val splitPace = if (remainingDistance > 0) {
                 splitDuration.toMillis() / 1000.0 / (remainingDistance / 1000.0)
@@ -121,5 +113,18 @@ object SplitCalculator {
         }
 
         return splits
+    }
+
+    /** Integrate speed samples to get total distance using trapezoidal rule. */
+    private fun integrateDistance(sorted: List<Pair<Instant, Double>>): Double {
+        var total = 0.0
+        for (i in 0 until sorted.size - 1) {
+            val (t0, v0) = sorted[i]
+            val (t1, v1) = sorted[i + 1]
+            val intervalSeconds = Duration.between(t0, t1).toMillis() / 1000.0
+            if (intervalSeconds <= 0) continue
+            total += (v0 + v1) / 2.0 * intervalSeconds
+        }
+        return total
     }
 }

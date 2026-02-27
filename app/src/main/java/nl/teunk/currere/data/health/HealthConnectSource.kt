@@ -13,13 +13,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import nl.teunk.currere.domain.compute.DistanceSegment
 import nl.teunk.currere.domain.compute.PaceCalculator
 import nl.teunk.currere.domain.compute.SplitCalculator
-import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
 import java.time.Instant
+import java.time.ZoneId
 
 class HealthConnectSource(
     private val client: HealthConnectClient,
@@ -118,6 +117,51 @@ class HealthConnectSource(
     }
 
     /**
+     * Compute steps for a session. First tries the standard aggregation (works
+     * when granular per-minute records exist). Falls back to reading the daily
+     * step record, which Samsung Health writes as a single 24h aggregate.
+     */
+    private suspend fun computeStepsForSession(
+        startTime: Instant,
+        endTime: Instant,
+    ): Long = withContext(Dispatchers.IO) {
+        // Try the standard aggregation (works for granular per-minute records)
+        val aggSteps = client.aggregate(
+            AggregateRequest(
+                metrics = setOf(StepsRecord.COUNT_TOTAL),
+                timeRangeFilter = TimeRangeFilter.between(startTime, endTime),
+            )
+        )[StepsRecord.COUNT_TOTAL]
+
+        if (aggSteps != null && aggSteps > 0) return@withContext aggSteps
+
+        // Fallback: read daily step records and use the highest count.
+        // Samsung Health writes a single 24h record; when there's one run per
+        // day the daily total is a good approximation.
+        val dayStart = startTime.atZone(ZoneId.systemDefault())
+            .toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()
+        val dayEnd = dayStart.plusSeconds(86400)
+
+        val allRecords = mutableListOf<StepsRecord>()
+        var pageToken: String? = null
+        do {
+            val response = client.readRecords(
+                ReadRecordsRequest(
+                    StepsRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(dayStart, dayEnd),
+                    pageToken = pageToken,
+                )
+            )
+            allRecords.addAll(response.records)
+            pageToken = response.pageToken
+        } while (pageToken != null)
+
+        // Pick the highest daily count (Samsung Health and Google Fit often
+        // mirror each other; taking max avoids double-counting).
+        allRecords.maxOfOrNull { it.count } ?: 0L
+    }
+
+    /**
      * Load full detail for a single run session.
      */
     suspend fun loadRunDetail(
@@ -137,42 +181,30 @@ class HealthConnectSource(
                 ReadRecordsRequest(SpeedRecord::class, timeRangeFilter = timeRange)
             ).records
         }
-        val distanceDeferred = async(Dispatchers.IO) {
-            client.readRecords(
-                ReadRecordsRequest(DistanceRecord::class, timeRangeFilter = timeRange)
-            ).records
-        }
         val aggDeferred = async(Dispatchers.IO) {
             aggregateSessionStats(startTime, endTime)
         }
-        val sessionsDeferred = async(Dispatchers.IO) {
-            client.readRecords(
-                ReadRecordsRequest(
-                    ExerciseSessionRecord::class,
-                    timeRangeFilter = timeRange,
-                )
-            ).records
+        val stepsDeferred = async(Dispatchers.IO) {
+            computeStepsForSession(startTime, endTime)
         }
 
         val hrRecords = hrDeferred.await()
         val speedRecords = speedDeferred.await()
-        val distanceRecords = distanceDeferred.await()
         val agg = aggDeferred.await()
-        val sessionRecords = sessionsDeferred.await()
+        val totalSteps = stepsDeferred.await()
 
-        val exerciseSession = sessionRecords.firstOrNull { it.metadata.id == sessionId }
-            ?: sessionRecords.first()
-
-        val session = Mappers.toRunSession(exerciseSession, agg)
+        val session = Mappers.toRunSession(
+            client.readRecord(ExerciseSessionRecord::class, sessionId).record, agg
+        )
         val heartRateSamples = Mappers.toHeartRateSamples(hrRecords)
         val speedPairs = Mappers.toSpeedPairs(speedRecords)
         val paceSamples = PaceCalculator.toPaceSamples(speedPairs)
-        val distanceSegments = Mappers.toDistanceSegments(distanceRecords)
-        val splits = SplitCalculator.computeSplits(distanceSegments)
+        val totalDistance = agg[DistanceRecord.DISTANCE_TOTAL]?.inMeters
+        val splits = SplitCalculator.computeSplits(speedPairs, totalDistance, startTime)
 
         RunDetail(
             session = session,
-            totalSteps = Mappers.totalSteps(agg),
+            totalSteps = totalSteps,
             heartRateSamples = heartRateSamples,
             paceSamples = paceSamples,
             splits = splits,
