@@ -24,9 +24,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.continuous
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
@@ -34,25 +31,40 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.patrykandpatrick.vico.core.common.shape.Shape
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.PaceSample
 import nl.teunk.currere.ui.preview.SamplePaceSamples
 import nl.teunk.currere.ui.preview.SampleRunSession
 import nl.teunk.currere.ui.theme.ChartPace
 import nl.teunk.currere.ui.theme.CurrereTheme
-import nl.teunk.currere.ui.theme.TextSecondary
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.abs
+
+internal data class PaceChartData(
+    val xValues: List<Long>,
+    val yValues: List<Double>,
+    val splitYValue: Double,
+)
+
+/** Prepare pace data for charting. Negates Y so faster pace appears at top. */
+internal fun preparePaceData(
+    samples: List<PaceSample>,
+    sessionStartTime: Instant,
+): PaceChartData {
+    val yValues = samples.map { -it.secondsPerKm }
+    return PaceChartData(
+        xValues = samples.map { Duration.between(sessionStartTime, it.time).seconds },
+        yValues = yValues,
+        splitYValue = yValues.min() - 50.0,
+    )
+}
 
 @Composable
 fun PaceChart(
@@ -65,11 +77,9 @@ fun PaceChart(
 
     val avgPaceFormatted = averagePaceSecondsPerKm?.let { StatsAggregator.formatPace(it) } ?: "—"
 
-    // Negate Y values so faster pace (lower seconds) appears at the top
-    val yValues = samples.map { -it.secondsPerKm }
-    val splitYValue = yValues.min() - 50.0
-
-    val xValues = samples.map { Duration.between(sessionStartTime, it.time).seconds }
+    val (xValues, yValues, splitYValue) = remember(samples, sessionStartTime) {
+        preparePaceData(samples, sessionStartTime)
+    }
 
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
@@ -80,44 +90,20 @@ fun PaceChart(
         }
     )
 
-    // Y-axis range: centered on average, padded beyond min/max
     val rangeProvider = remember(yValues) {
-        val min = yValues.min()
-        val max = yValues.max()
-        val avg = yValues.average()
-        val padding = 20.0 // ~20 seconds/km padding
-        val halfRange = maxOf(avg - min, max - avg) + padding
-        CartesianLayerRangeProvider.fixed(minY = avg - halfRange, maxY = avg + halfRange)
+        ChartDefaults.centeredRangeProvider(yValues, padding = 20.0)
     }
 
     val totalDurationMinutes = remember(xValues) {
         if (xValues.isEmpty()) 0L else xValues.last() / 60
     }
     val labelSpacingMinutes = remember(totalDurationMinutes) {
-        when {
-            totalDurationMinutes <= 10 -> 2
-            totalDurationMinutes <= 30 -> 5
-            totalDurationMinutes <= 60 -> 10
-            totalDurationMinutes <= 120 -> 15
-            else -> 30
-        }
+        ChartDefaults.labelSpacingMinutes(totalDurationMinutes)
     }
 
     val lineColor = ChartPace
-
-    val gridLine = rememberAxisGuidelineComponent(
-        fill = fill(TextSecondary.copy(alpha = 0.15f)),
-        thickness = 0.5.dp,
-        shape = Shape.Rectangle,
-    )
-
-    val axisLabel = rememberAxisLabelComponent(color = TextSecondary)
-
-    val timeFormatter = remember {
-        CartesianValueFormatter { _, value, _ ->
-            formatTimeAxis(value.toLong())
-        }
-    }
+    val gridLine = ChartDefaults.rememberGridLine()
+    val axisLabel = ChartDefaults.rememberLabel()
 
     val paceFormatter = remember {
         CartesianValueFormatter { _, value, _ ->
@@ -193,19 +179,7 @@ fun PaceChart(
                     line = null,
                     itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
                 ),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    label = axisLabel,
-                    valueFormatter = timeFormatter,
-                    guideline = null,
-                    tick = null,
-                    line = null,
-                    itemPlacer = remember(labelSpacingMinutes) {
-                        HorizontalAxis.ItemPlacer.aligned(
-                            spacing = { labelSpacingMinutes },
-                            addExtremeLabelPadding = true,
-                        )
-                    },
-                ),
+                bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
             ),
             model = model,
             scrollState = rememberVicoScrollState(scrollEnabled = false),

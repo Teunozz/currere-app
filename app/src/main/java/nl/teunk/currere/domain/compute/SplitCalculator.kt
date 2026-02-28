@@ -31,15 +31,24 @@ object SplitCalculator {
             sorted
         }
 
-        // First pass: compute raw integrated distance to determine scale factor
-        val scaleFactor = if (totalDistanceMeters != null && totalDistanceMeters > 0) {
-            val rawTotal = integrateDistance(corrected)
-            if (rawTotal > 0) totalDistanceMeters / rawTotal else 1.0
-        } else {
-            1.0
-        }
+        val scaleFactor = computeScaleFactor(corrected, totalDistanceMeters)
 
-        // Second pass: find km boundaries using scaled distances
+        return findKmSplits(corrected, scaleFactor)
+    }
+
+    private fun computeScaleFactor(
+        corrected: List<Pair<Instant, Double>>,
+        totalDistanceMeters: Double?,
+    ): Double {
+        if (totalDistanceMeters == null || totalDistanceMeters <= 0) return 1.0
+        val rawTotal = integrateDistance(corrected)
+        return if (rawTotal > 0) totalDistanceMeters / rawTotal else 1.0
+    }
+
+    private fun findKmSplits(
+        corrected: List<Pair<Instant, Double>>,
+        scaleFactor: Double,
+    ): List<PaceSplit> {
         val splits = mutableListOf<PaceSplit>()
         var cumulativeDistance = 0.0
         var splitStartTime = corrected.first().first
@@ -47,68 +56,81 @@ object SplitCalculator {
         var cumulativeDuration = Duration.ZERO
 
         for (i in 0 until corrected.size - 1) {
-            val (t0, _) = corrected[i]
+            val (t0, v0) = corrected[i]
             val (t1, v1) = corrected[i + 1]
             val intervalMs = Duration.between(t0, t1).toMillis()
             if (intervalMs <= 0) continue
 
-            val intervalSeconds = intervalMs / 1000.0
-            val avgSpeed = (corrected[i].second + v1) / 2.0
-            val intervalDistance = avgSpeed * intervalSeconds * scaleFactor
+            val intervalDistance = (v0 + v1) / 2.0 * (intervalMs / 1000.0) * scaleFactor
             val prevCumulative = cumulativeDistance
             cumulativeDistance += intervalDistance
 
             while (cumulativeDistance >= currentKm * 1000.0) {
-                val boundaryDistance = currentKm * 1000.0
-                val distanceIntoBoundary = boundaryDistance - prevCumulative
-                val fraction = if (intervalDistance > 0) {
-                    distanceIntoBoundary / intervalDistance
-                } else {
-                    0.0
-                }
-                val boundaryTime = t0.plusMillis((intervalMs * fraction).toLong())
+                val boundary = interpolateBoundaryTime(
+                    t0, intervalMs, prevCumulative, intervalDistance,
+                    boundaryDistance = currentKm * 1000.0,
+                )
+                val splitDuration = Duration.between(splitStartTime, boundary)
+                cumulativeDuration += splitDuration
 
-                val splitDuration = Duration.between(splitStartTime, boundaryTime)
-                cumulativeDuration = cumulativeDuration.plus(splitDuration)
-                val splitPace = splitDuration.toMillis() / 1000.0 // seconds for 1 km
-
-                splits.add(
-                    PaceSplit(
-                        kilometerNumber = currentKm,
-                        distanceMeters = 1000.0,
-                        splitDuration = splitDuration,
-                        splitPaceSecondsPerKm = splitPace,
-                        cumulativeDuration = cumulativeDuration,
-                        isPartial = false,
-                    )
+                splits += PaceSplit(
+                    kilometerNumber = currentKm,
+                    distanceMeters = 1000.0,
+                    splitDuration = splitDuration,
+                    splitPaceSecondsPerKm = splitDuration.toMillis() / 1000.0,
+                    cumulativeDuration = cumulativeDuration,
+                    isPartial = false,
                 )
 
-                splitStartTime = boundaryTime
+                splitStartTime = boundary
                 currentKm++
             }
         }
 
-        // Final partial split
-        val remainingDistance = cumulativeDistance - (currentKm - 1) * 1000.0
-        if (remainingDistance > 0.1) {
-            val lastTime = corrected.last().first
-            val splitDuration = Duration.between(splitStartTime, lastTime)
-            cumulativeDuration = cumulativeDuration.plus(splitDuration)
-            val splitPace = splitDuration.toMillis() / 1000.0 / (remainingDistance / 1000.0)
-
-            splits.add(
-                PaceSplit(
-                    kilometerNumber = currentKm,
-                    distanceMeters = remainingDistance,
-                    splitDuration = splitDuration,
-                    splitPaceSecondsPerKm = splitPace,
-                    cumulativeDuration = cumulativeDuration,
-                    isPartial = true,
-                )
-            )
-        }
+        addPartialSplit(
+            splits, corrected, cumulativeDistance, currentKm, splitStartTime, cumulativeDuration,
+        )
 
         return splits
+    }
+
+    private fun interpolateBoundaryTime(
+        intervalStart: Instant,
+        intervalMs: Long,
+        prevCumulative: Double,
+        intervalDistance: Double,
+        boundaryDistance: Double,
+    ): Instant {
+        val fraction = if (intervalDistance > 0) {
+            (boundaryDistance - prevCumulative) / intervalDistance
+        } else {
+            0.0
+        }
+        return intervalStart.plusMillis((intervalMs * fraction).toLong())
+    }
+
+    private fun addPartialSplit(
+        splits: MutableList<PaceSplit>,
+        corrected: List<Pair<Instant, Double>>,
+        cumulativeDistance: Double,
+        currentKm: Int,
+        splitStartTime: Instant,
+        cumulativeDuration: Duration,
+    ) {
+        val remainingDistance = cumulativeDistance - (currentKm - 1) * 1000.0
+        if (remainingDistance <= 0.1) return
+
+        val lastTime = corrected.last().first
+        val splitDuration = Duration.between(splitStartTime, lastTime)
+
+        splits += PaceSplit(
+            kilometerNumber = currentKm,
+            distanceMeters = remainingDistance,
+            splitDuration = splitDuration,
+            splitPaceSecondsPerKm = splitDuration.toMillis() / 1000.0 / (remainingDistance / 1000.0),
+            cumulativeDuration = cumulativeDuration + splitDuration,
+            isPartial = true,
+        )
     }
 
     /** Integrate speed samples to get total distance using trapezoidal rule. */

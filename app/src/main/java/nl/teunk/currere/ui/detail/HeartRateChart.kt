@@ -24,9 +24,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberEnd
 import com.patrykandpatrick.vico.compose.cartesian.layer.continuous
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
@@ -34,23 +31,32 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.patrykandpatrick.vico.core.common.shape.Shape
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.ui.preview.SampleHeartRateSamples
 import nl.teunk.currere.ui.preview.SampleRunSession
 import nl.teunk.currere.ui.theme.ChartHeartRate
 import nl.teunk.currere.ui.theme.CurrereTheme
-import nl.teunk.currere.ui.theme.TextSecondary
 import java.time.Duration
 import java.time.Instant
+
+/** Downsample HR data to 1 point per minute (average BPM per 60s bucket). */
+internal fun downsampleHeartRate(
+    samples: List<HeartRateSample>,
+    sessionStartTime: Instant,
+): List<Pair<Long, Double>> =
+    samples
+        .groupBy { Duration.between(sessionStartTime, it.time).seconds / 60 }
+        .entries
+        .sortedBy { it.key }
+        .map { (minuteBucket, bucketSamples) ->
+            minuteBucket * 60L to bucketSamples.map { it.bpm }.average()
+        }
 
 @Composable
 fun HeartRateChart(
@@ -62,15 +68,8 @@ fun HeartRateChart(
 
     val avgHr = samples.map { it.bpm }.average().toLong()
 
-    // Downsample: 1 point per minute (average BPM per 60s bucket)
     val downsampled = remember(samples, sessionStartTime) {
-        samples
-            .groupBy { Duration.between(sessionStartTime, it.time).seconds / 60 }
-            .entries
-            .sortedBy { it.key }
-            .map { (minuteBucket, bucketSamples) ->
-                minuteBucket * 60L to bucketSamples.map { it.bpm }.average()
-            }
+        downsampleHeartRate(samples, sessionStartTime)
     }
 
     val model = CartesianChartModel(
@@ -82,45 +81,21 @@ fun HeartRateChart(
         }
     )
 
-    // Y-axis range: centered on average, padded beyond min/max
     val hrValues = remember(downsampled) { downsampled.map { it.second } }
     val rangeProvider = remember(hrValues) {
-        val min = hrValues.min()
-        val max = hrValues.max()
-        val avg = hrValues.average()
-        val padding = 5.0
-        val halfRange = maxOf(avg - min, max - avg) + padding
-        CartesianLayerRangeProvider.fixed(minY = avg - halfRange, maxY = avg + halfRange)
+        ChartDefaults.centeredRangeProvider(hrValues, padding = 5.0)
     }
 
     val totalDurationMinutes = remember(downsampled) {
         if (downsampled.isEmpty()) 0L else downsampled.last().first / 60
     }
     val labelSpacingMinutes = remember(totalDurationMinutes) {
-        when {
-            totalDurationMinutes <= 10 -> 2
-            totalDurationMinutes <= 30 -> 5
-            totalDurationMinutes <= 60 -> 10
-            totalDurationMinutes <= 120 -> 15
-            else -> 30
-        }
+        ChartDefaults.labelSpacingMinutes(totalDurationMinutes)
     }
 
     val lineColor = ChartHeartRate
-
-    val gridLine = rememberAxisGuidelineComponent(
-        fill = fill(TextSecondary.copy(alpha = 0.15f)),
-        thickness = 0.5.dp,
-        shape = Shape.Rectangle,
-    )
-
-    val axisLabel = rememberAxisLabelComponent(color = TextSecondary)
-
-    val timeFormatter = remember {
-        CartesianValueFormatter { _, value, _ ->
-            formatTimeAxis(value.toLong())
-        }
-    }
+    val gridLine = ChartDefaults.rememberGridLine()
+    val axisLabel = ChartDefaults.rememberLabel()
 
     Column(modifier = modifier.fillMaxWidth()) {
         // Header
@@ -188,19 +163,7 @@ fun HeartRateChart(
                     line = null,
                     itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
                 ),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    label = axisLabel,
-                    valueFormatter = timeFormatter,
-                    guideline = null,
-                    tick = null,
-                    line = null,
-                    itemPlacer = remember(labelSpacingMinutes) {
-                        HorizontalAxis.ItemPlacer.aligned(
-                            spacing = { labelSpacingMinutes },
-                            addExtremeLabelPadding = true,
-                        )
-                    },
-                ),
+                bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
             ),
             model = model,
             scrollState = rememberVicoScrollState(scrollEnabled = false),
@@ -212,13 +175,6 @@ fun HeartRateChart(
                 },
         )
     }
-}
-
-internal fun formatTimeAxis(totalSeconds: Long): String = when {
-    totalSeconds <= 0L -> "0 s"
-    totalSeconds < 3600L -> "${totalSeconds / 60}m"
-    totalSeconds % 3600L == 0L -> "${totalSeconds / 3600}h"
-    else -> "${totalSeconds / 3600}h${(totalSeconds % 3600) / 60}m"
 }
 
 @Preview

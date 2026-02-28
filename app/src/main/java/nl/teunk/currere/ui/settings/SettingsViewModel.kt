@@ -28,11 +28,17 @@ class SettingsViewModel(
         if (epochMillis == null) return "Never"
         val diff = System.currentTimeMillis() - epochMillis
         return when {
-            diff < 60_000 -> "Just now"
-            diff < 3_600_000 -> "${diff / 60_000} min ago"
-            diff < 86_400_000 -> "${diff / 3_600_000} hours ago"
-            else -> "${diff / 86_400_000} days ago"
+            diff < MILLIS_PER_MINUTE -> "Just now"
+            diff < MILLIS_PER_HOUR -> "${diff / MILLIS_PER_MINUTE} min ago"
+            diff < MILLIS_PER_DAY -> "${diff / MILLIS_PER_HOUR} hours ago"
+            else -> "${diff / MILLIS_PER_DAY} days ago"
         }
+    }
+
+    private companion object {
+        const val MILLIS_PER_MINUTE = 60_000L
+        const val MILLIS_PER_HOUR = 3_600_000L
+        const val MILLIS_PER_DAY = 86_400_000L
     }
 
     val uiState: StateFlow<SettingsUiState> = combine(

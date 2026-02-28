@@ -43,17 +43,14 @@ class DiaryViewModel(
         when {
             isInitialLoad && sessions.isEmpty() -> DiaryUiState.Loading
             sessions.isEmpty() -> DiaryUiState.Empty
-            else -> {
-                _isInitialLoad.value = false
-                DiaryUiState.Success(
-                    sessions.map { session ->
-                        DiaryRunItem(
-                            session = session,
-                            syncRecord = syncMap[session.id],
-                        )
-                    }
-                )
-            }
+            else -> DiaryUiState.Success(
+                sessions.map { session ->
+                    DiaryRunItem(
+                        session = session,
+                        syncRecord = syncMap[session.id],
+                    )
+                }
+            )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DiaryUiState.Loading)
 
@@ -69,7 +66,7 @@ class DiaryViewModel(
                 runSessionRepository.refreshIncremental()
                 _isInitialLoad.value = false
                 SyncWorker.enqueueOneTime(appContext)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _isInitialLoad.value = false
             }
         }
@@ -81,7 +78,7 @@ class DiaryViewModel(
             try {
                 runSessionRepository.refreshFull()
                 SyncWorker.enqueueOneTime(appContext)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Cached data remains visible
             } finally {
                 _isRefreshing.value = false

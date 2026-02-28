@@ -30,14 +30,8 @@ import nl.teunk.currere.data.sync.SyncState
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunSession
 import nl.teunk.currere.ui.preview.SampleRunSession
+import nl.teunk.currere.ui.DateFormatters
 import nl.teunk.currere.ui.theme.CurrereTheme
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
-private val dateFormatter = DateTimeFormatter
-    .ofPattern("EEE d MMM yyyy, HH:mm", Locale.US)
-    .withZone(ZoneId.systemDefault())
 
 @Composable
 fun RunCard(
@@ -46,7 +40,7 @@ fun RunCard(
     modifier: Modifier = Modifier,
     syncRecord: SyncRecord? = null,
 ) {
-    val formattedDate = dateFormatter.format(session.startTime)
+    val formattedDate = DateFormatters.dateTimeCompact.format(session.startTime)
     val distanceText = "${StatsAggregator.formatDistanceKm(session.distanceMeters)} km"
     val durationText = StatsAggregator.formatDuration(session.activeDuration)
     val paceText = session.averagePaceSecondsPerKm?.let {

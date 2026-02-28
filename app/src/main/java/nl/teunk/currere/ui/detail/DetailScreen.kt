@@ -28,19 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nl.teunk.currere.domain.model.RunDetail
+import nl.teunk.currere.ui.DateFormatters
 import nl.teunk.currere.ui.preview.SampleRunDetail
 import nl.teunk.currere.ui.theme.CurrereTheme
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
-private val dateFormatter = DateTimeFormatter
-    .ofPattern("EEEE d MMMM yyyy", Locale.US)
-    .withZone(ZoneId.systemDefault())
-
-private val timeFormatter = DateTimeFormatter
-    .ofPattern("HH:mm", Locale.US)
-    .withZone(ZoneId.systemDefault())
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,11 +114,11 @@ fun DetailContent(
     ) {
         // Header
         Text(
-            text = dateFormatter.format(session.startTime),
+            text = DateFormatters.dateFull.format(session.startTime),
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            text = "${timeFormatter.format(session.startTime)} – ${timeFormatter.format(session.endTime)}",
+            text = "${DateFormatters.timeShort.format(session.startTime)} – ${DateFormatters.timeShort.format(session.endTime)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
