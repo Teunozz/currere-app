@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.sync.SyncRecord
-import nl.teunk.currere.data.sync.SyncRepository
 import nl.teunk.currere.data.sync.SyncStatusStore
 import nl.teunk.currere.data.sync.SyncWorker
 import nl.teunk.currere.domain.model.RunSession
@@ -31,7 +30,6 @@ sealed interface DiaryUiState {
 class DiaryViewModel(
     private val runSessionRepository: RunSessionRepository,
     private val syncStatusStore: SyncStatusStore,
-    private val syncRepository: SyncRepository,
     private val appContext: Context,
 ) : ViewModel() {
 

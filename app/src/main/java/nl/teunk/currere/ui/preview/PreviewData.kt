@@ -1,12 +1,16 @@
 package nl.teunk.currere.ui.preview
 
+import nl.teunk.currere.data.sync.SyncRecord
+import nl.teunk.currere.data.sync.SyncState
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.PaceSample
 import nl.teunk.currere.domain.model.PaceSplit
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.ui.diary.DiaryRunItem
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.sin
 
 private val sampleStart: Instant = Instant.parse("2026-02-20T07:30:00Z")
 private val sampleEnd: Instant = sampleStart.plus(Duration.ofMinutes(42))
@@ -23,26 +27,34 @@ val SampleRunSession = RunSession(
 )
 
 val SampleRunSessions = listOf(
-    SampleRunSession,
-    RunSession(
-        id = "preview-2",
-        startTime = sampleStart.minus(Duration.ofDays(2)),
-        endTime = sampleStart.minus(Duration.ofDays(2)).plus(Duration.ofMinutes(28)),
-        distanceMeters = 5_120.0,
-        activeDuration = Duration.ofMinutes(28).plusSeconds(33),
-        averagePaceSecondsPerKm = 335.0,
-        averageHeartRateBpm = 148,
-        title = "Easy Run",
+    DiaryRunItem(
+        session = SampleRunSession,
+        syncRecord = SyncRecord(serverId = 1, state = SyncState.SYNCED),
     ),
-    RunSession(
-        id = "preview-3",
-        startTime = sampleStart.minus(Duration.ofDays(4)),
-        endTime = sampleStart.minus(Duration.ofDays(4)).plus(Duration.ofMinutes(55)),
-        distanceMeters = 10_030.0,
-        activeDuration = Duration.ofMinutes(55).plusSeconds(12),
-        averagePaceSecondsPerKm = 330.0,
-        averageHeartRateBpm = 162,
-        title = "Long Run",
+    DiaryRunItem(
+        session = RunSession(
+            id = "preview-2",
+            startTime = sampleStart.minus(Duration.ofDays(2)),
+            endTime = sampleStart.minus(Duration.ofDays(2)).plus(Duration.ofMinutes(28)),
+            distanceMeters = 5_120.0,
+            activeDuration = Duration.ofMinutes(28).plusSeconds(33),
+            averagePaceSecondsPerKm = 335.0,
+            averageHeartRateBpm = 148,
+            title = "Easy Run",
+        ),
+        syncRecord = SyncRecord(state = SyncState.PENDING),
+    ),
+    DiaryRunItem(
+        session = RunSession(
+            id = "preview-3",
+            startTime = sampleStart.minus(Duration.ofDays(4)),
+            endTime = sampleStart.minus(Duration.ofDays(4)).plus(Duration.ofMinutes(55)),
+            distanceMeters = 10_030.0,
+            activeDuration = Duration.ofMinutes(55).plusSeconds(12),
+            averagePaceSecondsPerKm = 330.0,
+            averageHeartRateBpm = 162,
+            title = "Long Run",
+        ),
     ),
 )
 
@@ -58,14 +70,14 @@ val SampleSplits = listOf(
 val SampleHeartRateSamples = (0..40).map { i ->
     HeartRateSample(
         time = sampleStart.plusSeconds(i * 60L),
-        bpm = (140 + (Math.sin(i * 0.3) * 20).toLong()),
+        bpm = (140 + (sin(i * 0.3) * 20).toLong()),
     )
 }
 
 val SamplePaceSamples = (0..40).map { i ->
     PaceSample(
         time = sampleStart.plusSeconds(i * 60L),
-        secondsPerKm = 300.0 + Math.sin(i * 0.25) * 30,
+        secondsPerKm = 300.0 + sin(i * 0.25) * 30,
     )
 }
 

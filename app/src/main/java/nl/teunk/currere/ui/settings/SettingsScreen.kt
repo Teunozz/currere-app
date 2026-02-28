@@ -29,9 +29,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.ui.theme.CurrereTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -40,6 +41,27 @@ fun SettingsScreen(
     onManualSetup: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    SettingsScreenContent(
+        uiState = uiState,
+        onBack = onBack,
+        onDisconnect = {
+            viewModel.disconnect()
+        },
+        onScanQrCode = onScanQrCode,
+        onManualSetup = onManualSetup,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreenContent(
+    uiState: SettingsUiState,
+    onBack: () -> Unit,
+    onDisconnect: () -> Unit,
+    onScanQrCode: () -> Unit,
+    onManualSetup: () -> Unit
+) {
     var showDisconnectDialog by remember { mutableStateOf(false) }
 
     if (showDisconnectDialog) {
@@ -49,7 +71,7 @@ fun SettingsScreen(
             text = { Text("This will remove your server connection and clear all sync data.") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.disconnect()
+                    onDisconnect()
                     showDisconnectDialog = false
                 }) {
                     Text("Disconnect", color = MaterialTheme.colorScheme.error)
@@ -105,7 +127,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Last sync: ${formatRelativeTime(uiState.lastSyncTime)}",
+                    text = "Last sync: ${uiState.lastSyncTime}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -148,13 +170,16 @@ fun SettingsScreen(
     }
 }
 
-private fun formatRelativeTime(epochMillis: Long?): String {
-    if (epochMillis == null) return "Never"
-    val diff = System.currentTimeMillis() - epochMillis
-    return when {
-        diff < 60_000 -> "Just now"
-        diff < 3_600_000 -> "${diff / 60_000} min ago"
-        diff < 86_400_000 -> "${diff / 3_600_000} hours ago"
-        else -> "${diff / 86_400_000} days ago"
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+    CurrereTheme {
+        SettingsScreenContent(
+            uiState = SettingsUiState(),
+            onBack = {},
+            onDisconnect = {},
+            onScanQrCode = {},
+            onManualSetup = {}
+        )
     }
 }

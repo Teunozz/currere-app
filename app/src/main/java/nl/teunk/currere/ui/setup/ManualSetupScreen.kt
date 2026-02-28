@@ -28,7 +28,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.ui.theme.CurrereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +51,34 @@ fun ManualSetupScreen(
         }
     }
 
+    ManualSetupContent(
+        state = state,
+        serverUrl = serverUrl,
+        token = token,
+        onServerUrlChange = {
+            serverUrl = it
+            if (state is SetupState.Error) viewModel.resetState()
+        },
+        onTokenChange = {
+            token = it
+            if (state is SetupState.Error) viewModel.resetState()
+        },
+        onConnect = { viewModel.connectWithCredentials(serverUrl, token) },
+        onBack = onBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ManualSetupContent(
+    state: SetupState,
+    serverUrl: String,
+    token: String,
+    onServerUrlChange: (String) -> Unit,
+    onTokenChange: (String) -> Unit,
+    onConnect: () -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,10 +104,7 @@ fun ManualSetupScreen(
         ) {
             OutlinedTextField(
                 value = serverUrl,
-                onValueChange = {
-                    serverUrl = it
-                    if (state is SetupState.Error) viewModel.resetState()
-                },
+                onValueChange = onServerUrlChange,
                 label = { Text("Server URL") },
                 placeholder = { Text("https://your-server.com") },
                 singleLine = true,
@@ -87,10 +114,7 @@ fun ManualSetupScreen(
 
             OutlinedTextField(
                 value = token,
-                onValueChange = {
-                    token = it
-                    if (state is SetupState.Error) viewModel.resetState()
-                },
+                onValueChange = onTokenChange,
                 label = { Text("API Token") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -99,7 +123,7 @@ fun ManualSetupScreen(
 
             if (state is SetupState.Error) {
                 Text(
-                    text = (state as SetupState.Error).message,
+                    text = state.message,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -108,7 +132,7 @@ fun ManualSetupScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { viewModel.connectWithCredentials(serverUrl, token) },
+                onClick = onConnect,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state !is SetupState.Testing && serverUrl.isNotBlank() && token.isNotBlank(),
             ) {
@@ -122,5 +146,21 @@ fun ManualSetupScreen(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun ManualSetupPreview() {
+    CurrereTheme {
+        ManualSetupContent(
+            state = SetupState.Idle,
+            serverUrl = "https://currere.example.com",
+            token = "abc123",
+            onServerUrlChange = {},
+            onTokenChange = {},
+            onConnect = {},
+            onBack = {},
+        )
     }
 }

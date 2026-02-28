@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import nl.teunk.currere.domain.model.RunSession
 import nl.teunk.currere.ui.components.EmptyState
 import nl.teunk.currere.ui.preview.SampleRunSessions
@@ -127,5 +128,33 @@ fun DiaryScreenContent(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun DiaryScreenSuccessPreview() {
+    CurrereTheme {
+        DiaryScreenContent(
+            uiState = DiaryUiState.Success(SampleRunSessions),
+            isRefreshing = false,
+            onRefresh = {},
+            onRunClick = {},
+            onSettingsClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DiaryScreenEmptyPreview() {
+    CurrereTheme {
+        DiaryScreenContent(
+            uiState = DiaryUiState.Empty,
+            isRefreshing = false,
+            onRefresh = {},
+            onRunClick = {},
+            onSettingsClick = {},
+        )
     }
 }

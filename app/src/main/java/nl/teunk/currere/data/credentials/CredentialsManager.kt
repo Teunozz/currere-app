@@ -30,8 +30,6 @@ class CredentialsManager(context: Context) {
 
     val credentials: Flow<ServerCredentials?> = store.data
 
-    val hasCredentials: Flow<Boolean> = store.data.map { it != null }
-
     suspend fun save(baseUrl: String, token: String) {
         store.updateData { ServerCredentials(baseUrl = baseUrl.trimEnd('/'), token = token) }
     }

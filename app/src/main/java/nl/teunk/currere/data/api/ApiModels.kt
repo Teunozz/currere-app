@@ -72,21 +72,6 @@ data class RunResponse(
 )
 
 @Serializable
-data class RunDetailResponse(
-    val id: Long,
-    @SerialName("start_time") val startTime: String,
-    @SerialName("end_time") val endTime: String,
-    @SerialName("distance_km") val distanceKm: Double,
-    @SerialName("duration_seconds") val durationSeconds: Long,
-    val steps: Long? = null,
-    @SerialName("avg_heart_rate") val avgHeartRate: Long? = null,
-    @SerialName("avg_pace_seconds_per_km") val avgPaceSecondsPerKm: Long? = null,
-    @SerialName("heart_rate_samples") val heartRateSamples: List<HeartRateSampleRequest>? = null,
-    @SerialName("pace_splits") val paceSplits: List<PaceSplitRequest>? = null,
-    @SerialName("created_at") val createdAt: String? = null,
-)
-
-@Serializable
 data class BatchResultItem(
     val index: Int,
     val status: String,
@@ -122,12 +107,6 @@ data class PaginatedResponse<T>(
     val data: T,
     val meta: PaginationMeta? = null,
     val links: PaginationLinks? = null,
-)
-
-@Serializable
-data class ApiErrorResponse(
-    val message: String,
-    val errors: Map<String, List<String>>? = null,
 )
 
 // endregion

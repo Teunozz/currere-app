@@ -36,7 +36,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val dateFormatter = DateTimeFormatter
-    .ofPattern("EEE d MMM yyyy, HH:mm", Locale.getDefault())
+    .ofPattern("EEE d MMM yyyy, HH:mm", Locale.US)
     .withZone(ZoneId.systemDefault())
 
 @Composable

@@ -16,7 +16,6 @@ val LimeGreenDark = Color(0xFF99AA00)
 // Text
 val TextPrimary = Color.White
 val TextSecondary = Color(0xFF9E9E9E)
-val TextTertiary = Color(0xFF616161)
 
 // Chart
 val ChartHeartRate = Color(0xFFE57373)

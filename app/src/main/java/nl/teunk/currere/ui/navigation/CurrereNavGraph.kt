@@ -90,7 +90,6 @@ fun CurrereNavGraph() {
                 DiaryViewModel(
                     runSessionRepository = app.runSessionRepository,
                     syncStatusStore = app.syncStatusStore,
-                    syncRepository = app.syncRepository,
                     appContext = app,
                 )
             }
@@ -106,7 +105,7 @@ fun CurrereNavGraph() {
                     )
                 },
                 onSettingsClick = {
-                    navController.navigate(SettingsRoute)
+                    navController.navigate(ManualSetupRoute)
                 },
             )
         }

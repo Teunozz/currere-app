@@ -94,11 +94,7 @@ object SplitCalculator {
             val lastTime = corrected.last().first
             val splitDuration = Duration.between(splitStartTime, lastTime)
             cumulativeDuration = cumulativeDuration.plus(splitDuration)
-            val splitPace = if (remainingDistance > 0) {
-                splitDuration.toMillis() / 1000.0 / (remainingDistance / 1000.0)
-            } else {
-                0.0
-            }
+            val splitPace = splitDuration.toMillis() / 1000.0 / (remainingDistance / 1000.0)
 
             splits.add(
                 PaceSplit(

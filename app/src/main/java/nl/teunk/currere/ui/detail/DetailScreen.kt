@@ -35,11 +35,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val dateFormatter = DateTimeFormatter
-    .ofPattern("EEEE d MMMM yyyy", Locale.getDefault())
+    .ofPattern("EEEE d MMMM yyyy", Locale.US)
     .withZone(ZoneId.systemDefault())
 
 private val timeFormatter = DateTimeFormatter
-    .ofPattern("HH:mm", Locale.getDefault())
+    .ofPattern("HH:mm", Locale.US)
     .withZone(ZoneId.systemDefault())
 
 @OptIn(ExperimentalMaterial3Api::class)

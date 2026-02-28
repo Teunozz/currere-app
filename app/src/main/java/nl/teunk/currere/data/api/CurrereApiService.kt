@@ -9,9 +9,6 @@ import retrofit2.http.Query
 
 interface CurrereApiService {
 
-    @POST("runs")
-    suspend fun createRun(@Body run: RunRequest): Response<ApiResponse<RunResponse>>
-
     @POST("runs/batch")
     suspend fun createRunsBatch(@Body batch: BatchRunRequest): Response<ApiResponse<BatchRunResponseData>>
 
@@ -20,7 +17,4 @@ interface CurrereApiService {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 15,
     ): Response<PaginatedResponse<List<RunResponse>>>
-
-    @GET("runs/{id}")
-    suspend fun getRun(@Path("id") id: Long): Response<ApiResponse<RunDetailResponse>>
 }
