@@ -56,8 +56,4 @@ object Mappers {
             }
         }.sortedBy { it.first }
     }
-
-    fun totalSteps(aggregation: AggregationResult): Long {
-        return aggregation[StepsRecord.COUNT_TOTAL] ?: 0L
-    }
 }
