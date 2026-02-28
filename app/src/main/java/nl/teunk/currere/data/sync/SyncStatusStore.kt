@@ -14,9 +14,9 @@ import kotlinx.serialization.encodeToString
 
 private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStore(name = "sync_status")
 
-class SyncStatusStore(context: Context) {
+class SyncStatusStore(private val store: DataStore<Preferences>) {
 
-    private val store = context.syncDataStore
+    constructor(context: Context) : this(context.syncDataStore)
 
     private val json = Json { ignoreUnknownKeys = true }
 

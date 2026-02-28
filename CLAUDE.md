@@ -1,17 +1,5 @@
-# currere Development Guidelines
+# Currere Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-02-22
-
-## Active Technologies
-
-- Kotlin 2.0.21 + Jetpack Compose (BOM 2025.01.01), Material 3, Health Connect connect-client 1.1.0, Vico 2.x (charting), Navigation Compose 2.8.x with Kotlin Serialization (001-run-diary)
-
-## Project Structure
-
-```text
-src/
-tests/
-```
 
 ## Commands
 
@@ -21,14 +9,15 @@ tests/
 
 Kotlin 2.0.21: Follow standard conventions
 
-## Recent Changes
+## Development Rules
 
-- 001-run-diary: Added Kotlin 2.0.21 + Jetpack Compose (BOM 2025.01.01), Material 3, Health Connect connect-client 1.1.0, Vico 2.x (charting), Navigation Compose 2.8.x with Kotlin Serialization
-
-<!-- MANUAL ADDITIONS START -->
+- Follow KISS, SOLID, DRY, and YAGNI principles
+- Keep comments to a minimum — let the code explain itself
+- Write tests for new business logic
+- Check linting after implementation and fix any issues
+- Verify the app builds: `./gradlew assembleDebug`
+- Run all tests and ensure they pass: `./gradlew test`
 
 ## Tool Restrictions
 
 - **Never use the Dart MCP tools** in this project. This is a Kotlin/Android project, not a Dart/Flutter project.
-
-<!-- MANUAL ADDITIONS END -->
