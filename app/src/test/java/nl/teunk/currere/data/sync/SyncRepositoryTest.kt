@@ -10,6 +10,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import nl.teunk.currere.data.api.ApiClient
 import nl.teunk.currere.data.api.ApiResponse
+import nl.teunk.currere.data.api.BatchRunRequest
 import nl.teunk.currere.data.api.BatchResultItem
 import nl.teunk.currere.data.api.BatchRunResponseData
 import nl.teunk.currere.data.api.CurrereApiService
@@ -335,6 +336,78 @@ class SyncRepositoryTest {
         // Only s2 and s3 should be in the batch (s1 already synced)
         coVerify { apiService.createRunsBatch(match { it.runs.size == 2 }) }
         coVerify { syncStatusStore.markPending(listOf("s2", "s3")) }
+    }
+
+    @Test
+    fun `splits large batch into multiple requests`() = runTest {
+        setupConnected()
+        setupSyncMap()
+
+        // Create more sessions than the batch size
+        val sessions = (1..8).map { makeSession("s$it") }
+
+        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } answers {
+            makeDetail(makeSession("any"))
+        }
+        coEvery { apiService.createRunsBatch(any()) } answers {
+            val batchSize = firstArg<BatchRunRequest>().runs.size
+            Response.success(
+                ApiResponse(BatchRunResponseData(
+                    created = batchSize,
+                    skipped = 0,
+                    results = (0 until batchSize).map { idx ->
+                        BatchResultItem(index = idx, status = "created", id = 500L + idx)
+                    },
+                )),
+            )
+        }
+
+        val result = repository.syncSessions(sessions)
+
+        assertEquals(SyncResult.Success(synced = 8, total = 8), result)
+        // 8 sessions with batch size 5 = 2 API calls (5 + 3)
+        coVerify(exactly = 2) { apiService.createRunsBatch(any()) }
+        coVerify { apiService.createRunsBatch(match { it.runs.size == 5 }) }
+        coVerify { apiService.createRunsBatch(match { it.runs.size == 3 }) }
+    }
+
+    @Test
+    fun `stops batching on auth error from second batch`() = runTest {
+        setupConnected()
+        setupSyncMap()
+
+        val sessions = (1..8).map { makeSession("s$it") }
+
+        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } answers {
+            makeDetail(makeSession("any"))
+        }
+        // First batch succeeds, second returns 401
+        var callCount = 0
+        coEvery { apiService.createRunsBatch(any()) } answers {
+            callCount++
+            if (callCount == 1) {
+                val batchSize = firstArg<BatchRunRequest>().runs.size
+                Response.success(
+                    ApiResponse(BatchRunResponseData(
+                        created = batchSize,
+                        skipped = 0,
+                        results = (0 until batchSize).map { idx ->
+                            BatchResultItem(index = idx, status = "created", id = 600L + idx)
+                        },
+                    )),
+                )
+            } else {
+                Response.error(
+                    401,
+                    """{"message":"Unauthenticated."}""".toResponseBody("application/json".toMediaType()),
+                )
+            }
+        }
+
+        val result = repository.syncSessions(sessions)
+
+        assertEquals(SyncResult.Unauthorized, result)
+        coVerify(exactly = 2) { apiService.createRunsBatch(any()) }
     }
 
     // endregion

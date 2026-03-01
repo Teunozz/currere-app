@@ -48,7 +48,6 @@ class SyncRepository(
 
         syncStatusStore.markPending(unsynced.map { it.id })
 
-        // Load full detail for each unsynced session
         val runRequests = unsynced.map { session ->
             try {
                 val detail = healthConnectSource.loadRunDetail(
@@ -61,38 +60,51 @@ class SyncRepository(
                 session.toRunRequest()
             }
         }
-        val batchRequest = BatchRunRequest(runs = runRequests)
 
-        return try {
-            val response = service.createRunsBatch(batchRequest)
+        val chunks = runRequests.chunked(BATCH_SIZE)
+        val unsyncedChunks = unsynced.chunked(BATCH_SIZE)
+        var totalSynced = 0
 
-            when {
-                response.isSuccessful -> {
-                    val batchData = response.body()?.data
+        for ((i, chunk) in chunks.withIndex()) {
+            val batchRequest = BatchRunRequest(runs = chunk)
+            val chunkSessions = unsyncedChunks[i]
 
-                    batchData?.results?.forEach { result ->
-                        val sessionId = unsynced.getOrNull(result.index)?.id ?: return@forEach
-                        val serverId = result.id ?: return@forEach
+            try {
+                val response = service.createRunsBatch(batchRequest)
 
-                        when (result.status) {
-                            "created", "skipped" -> syncStatusStore.markSynced(sessionId, serverId)
-                            else -> syncStatusStore.markFailed(sessionId, "Status: ${result.status}")
+                when {
+                    response.isSuccessful -> {
+                        val batchData = response.body()?.data
+
+                        batchData?.results?.forEach { result ->
+                            val sessionId = chunkSessions.getOrNull(result.index)?.id ?: return@forEach
+                            val serverId = result.id ?: return@forEach
+
+                            when (result.status) {
+                                "created", "skipped" -> syncStatusStore.markSynced(sessionId, serverId)
+                                else -> syncStatusStore.markFailed(sessionId, "Status: ${result.status}")
+                            }
                         }
-                    }
 
-                    val syncedCount = (batchData?.created ?: 0) + (batchData?.skipped ?: 0)
-                    SyncResult.Success(synced = syncedCount, total = sessions.size)
+                        totalSynced += (batchData?.created ?: 0) + (batchData?.skipped ?: 0)
+                    }
+                    response.code() == 401 -> return SyncResult.Unauthorized
+                    response.code() == 422 -> return SyncResult.Error("Validation error from server")
+                    else -> return SyncResult.Error("Server returned ${response.code()}")
                 }
-                response.code() == 401 -> SyncResult.Unauthorized
-                response.code() == 422 -> SyncResult.Error("Validation error from server")
-                else -> SyncResult.Error("Server returned ${response.code()}")
+            } catch (e: Exception) {
+                chunkSessions.forEach { session ->
+                    syncStatusStore.markFailed(session.id, e.message ?: "Unknown error")
+                }
+                return SyncResult.Error(e.message ?: "Unknown error")
             }
-        } catch (e: Exception) {
-            unsynced.forEach { session ->
-                syncStatusStore.markFailed(session.id, e.message ?: "Unknown error")
-            }
-            SyncResult.Error(e.message ?: "Unknown error")
         }
+
+        return SyncResult.Success(synced = totalSynced, total = sessions.size)
+    }
+
+    companion object {
+        const val BATCH_SIZE = 5
     }
 
     private fun RunDetail.toRunRequest(): RunRequest {

@@ -105,7 +105,7 @@ fun CurrereNavGraph() {
                     )
                 },
                 onSettingsClick = {
-                    navController.navigate(ManualSetupRoute)
+                    navController.navigate(SettingsRoute)
                 },
             )
         }

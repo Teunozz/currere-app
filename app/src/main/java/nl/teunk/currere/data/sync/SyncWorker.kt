@@ -26,7 +26,7 @@ class SyncWorker(
 
         return when (result) {
             is SyncResult.Success -> Result.success()
-            is SyncResult.NotConnected -> Result.failure()
+            is SyncResult.NotConnected -> Result.success()
             is SyncResult.Unauthorized -> Result.failure()
             is SyncResult.Error -> Result.retry()
         }
