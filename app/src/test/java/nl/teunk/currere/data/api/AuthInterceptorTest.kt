@@ -3,12 +3,12 @@ package nl.teunk.currere.data.api
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.credentials.ServerCredentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,7 +28,7 @@ class AuthInterceptorTest {
 
     @After
     fun tearDown() {
-        server.shutdown()
+        server.close()
     }
 
     private fun buildClient(): OkHttpClient {
@@ -40,41 +40,41 @@ class AuthInterceptorTest {
     @Test
     fun `adds Accept json header always`() {
         every { credentialsManager.credentials } returns flowOf(null)
-        server.enqueue(MockResponse().setBody("{}"))
+        server.enqueue(MockResponse(body = "{}"))
 
         buildClient().newCall(Request.Builder().url(server.url("/test")).build()).execute()
 
         val recorded = server.takeRequest()
-        assertEquals("application/json", recorded.getHeader("Accept"))
+        assertEquals("application/json", recorded.headers["Accept"])
     }
 
     @Test
     fun `adds Authorization header when credentials present`() {
         val credentials = ServerCredentials(baseUrl = "https://example.com", token = "my-secret-token")
         every { credentialsManager.credentials } returns flowOf(credentials)
-        server.enqueue(MockResponse().setBody("{}"))
+        server.enqueue(MockResponse(body = "{}"))
 
         buildClient().newCall(Request.Builder().url(server.url("/test")).build()).execute()
 
         val recorded = server.takeRequest()
-        assertEquals("Bearer my-secret-token", recorded.getHeader("Authorization"))
+        assertEquals("Bearer my-secret-token", recorded.headers["Authorization"])
     }
 
     @Test
     fun `omits Authorization header when credentials null`() {
         every { credentialsManager.credentials } returns flowOf(null)
-        server.enqueue(MockResponse().setBody("{}"))
+        server.enqueue(MockResponse(body = "{}"))
 
         buildClient().newCall(Request.Builder().url(server.url("/test")).build()).execute()
 
         val recorded = server.takeRequest()
-        assertNull(recorded.getHeader("Authorization"))
+        assertNull(recorded.headers["Authorization"])
     }
 
     @Test
     fun `preserves original request URL and method`() {
         every { credentialsManager.credentials } returns flowOf(null)
-        server.enqueue(MockResponse().setBody("{}"))
+        server.enqueue(MockResponse(body = "{}"))
 
         val request = Request.Builder()
             .url(server.url("/api/runs?page=1"))
@@ -84,6 +84,6 @@ class AuthInterceptorTest {
 
         val recorded = server.takeRequest()
         assertEquals("GET", recorded.method)
-        assertEquals("/api/runs?page=1", recorded.path)
+        assertEquals("/api/runs?page=1", recorded.target)
     }
 }

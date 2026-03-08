@@ -1,6 +1,6 @@
 package nl.teunk.currere.data.api
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import nl.teunk.currere.data.credentials.CredentialsManager

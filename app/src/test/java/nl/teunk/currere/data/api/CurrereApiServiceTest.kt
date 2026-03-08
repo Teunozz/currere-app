@@ -1,12 +1,12 @@
 package nl.teunk.currere.data.api
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -40,15 +40,16 @@ class CurrereApiServiceTest {
 
     @After
     fun tearDown() {
-        server.shutdown()
+        server.close()
     }
 
     @Test
     fun `createRunsBatch sends POST to correct path`() = runTest {
         server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"data":{"created":1,"skipped":0,"results":[{"index":0,"status":"created","id":42}]}}""")
+            MockResponse(
+                code = 200,
+                body = """{"data":{"created":1,"skipped":0,"results":[{"index":0,"status":"created","id":42}]}}""",
+            )
         )
 
         val batch = BatchRunRequest(
@@ -60,15 +61,16 @@ class CurrereApiServiceTest {
 
         val recorded = server.takeRequest()
         assertEquals("POST", recorded.method)
-        assertEquals("/runs/batch", recorded.path)
+        assertEquals("/runs/batch", recorded.target)
     }
 
     @Test
     fun `createRunsBatch serializes request body correctly`() = runTest {
         server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"data":{"created":1,"skipped":0,"results":[]}}""")
+            MockResponse(
+                code = 200,
+                body = """{"data":{"created":1,"skipped":0,"results":[]}}""",
+            )
         )
 
         val batch = BatchRunRequest(
@@ -85,7 +87,7 @@ class CurrereApiServiceTest {
         service.createRunsBatch(batch)
 
         val recorded = server.takeRequest()
-        val body = recorded.body.readUtf8()
+        val body = recorded.body!!.utf8()
         assertTrue(body.contains("\"start_time\":\"2024-01-01T10:00:00Z\""))
         assertTrue(body.contains("\"distance_km\":5.0"))
         assertTrue(body.contains("\"steps\":5000"))
@@ -94,9 +96,10 @@ class CurrereApiServiceTest {
     @Test
     fun `createRunsBatch deserializes response correctly`() = runTest {
         server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"data":{"created":2,"skipped":1,"results":[{"index":0,"status":"created","id":10},{"index":1,"status":"created","id":11},{"index":2,"status":"skipped","id":12}]}}""")
+            MockResponse(
+                code = 200,
+                body = """{"data":{"created":2,"skipped":1,"results":[{"index":0,"status":"created","id":10},{"index":1,"status":"created","id":11},{"index":2,"status":"skipped","id":12}]}}""",
+            )
         )
 
         val batch = BatchRunRequest(runs = listOf(
@@ -116,25 +119,27 @@ class CurrereApiServiceTest {
     @Test
     fun `getRuns sends correct query params`() = runTest {
         server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"data":[],"meta":{"current_page":2,"last_page":5,"per_page":10,"total":50}}""")
+            MockResponse(
+                code = 200,
+                body = """{"data":[],"meta":{"current_page":2,"last_page":5,"per_page":10,"total":50}}""",
+            )
         )
 
         service.getRuns(page = 2, perPage = 10)
 
         val recorded = server.takeRequest()
         assertEquals("GET", recorded.method)
-        assertTrue(recorded.path!!.contains("page=2"))
-        assertTrue(recorded.path!!.contains("per_page=10"))
+        assertTrue(recorded.target.contains("page=2"))
+        assertTrue(recorded.target.contains("per_page=10"))
     }
 
     @Test
     fun `getRuns deserializes paginated response`() = runTest {
         server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"data":[{"id":1,"start_time":"2024-01-01T10:00:00Z","distance_km":5.0}],"meta":{"current_page":1,"last_page":1,"per_page":15,"total":1}}""")
+            MockResponse(
+                code = 200,
+                body = """{"data":[{"id":1,"start_time":"2024-01-01T10:00:00Z","distance_km":5.0}],"meta":{"current_page":1,"last_page":1,"per_page":15,"total":1}}""",
+            )
         )
 
         val response = service.getRuns()
@@ -149,7 +154,7 @@ class CurrereApiServiceTest {
 
     @Test
     fun `HTTP 401 is returned as unsuccessful response`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(401).setBody("""{"message":"Unauthenticated."}"""))
+        server.enqueue(MockResponse(code = 401, body = """{"message":"Unauthenticated."}"""))
 
         val response = service.getRuns()
 
@@ -159,7 +164,7 @@ class CurrereApiServiceTest {
 
     @Test
     fun `HTTP 422 is returned as unsuccessful response`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(422).setBody("""{"message":"Validation failed"}"""))
+        server.enqueue(MockResponse(code = 422, body = """{"message":"Validation failed"}"""))
 
         val batch = BatchRunRequest(runs = emptyList())
         val response = service.createRunsBatch(batch)

@@ -2,15 +2,15 @@ package nl.teunk.currere.ui.detail
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.common.shape.Shape
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.common.Fill
 import nl.teunk.currere.ui.theme.TextSecondary
 
 internal object ChartDefaults {
@@ -43,13 +43,13 @@ internal object ChartDefaults {
 
     @Composable
     fun rememberGridLine() = rememberAxisGuidelineComponent(
-        fill = fill(TextSecondary.copy(alpha = 0.15f)),
+        fill = Fill(TextSecondary.copy(alpha = 0.15f)),
         thickness = 0.5.dp,
-        shape = Shape.Rectangle,
+        shape = RectangleShape,
     )
 
     @Composable
-    fun rememberLabel() = rememberAxisLabelComponent(color = TextSecondary)
+    fun rememberLabel() = rememberAxisLabelComponent(style = TextStyle(color = TextSecondary))
 
     @Composable
     fun rememberTimeFormatter() = remember {
