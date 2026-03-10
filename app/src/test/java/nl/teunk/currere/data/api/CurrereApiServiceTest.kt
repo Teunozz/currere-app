@@ -9,7 +9,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -117,46 +116,42 @@ class CurrereApiServiceTest {
     }
 
     @Test
-    fun `getRuns sends correct query params`() = runTest {
+    fun `ping sends GET to correct path`() = runTest {
         server.enqueue(
             MockResponse(
                 code = 200,
-                body = """{"data":[],"meta":{"current_page":2,"last_page":5,"per_page":10,"total":50}}""",
+                body = """{"status":"ok"}""",
             )
         )
 
-        service.getRuns(page = 2, perPage = 10)
+        service.ping()
 
         val recorded = server.takeRequest()
         assertEquals("GET", recorded.method)
-        assertTrue(recorded.target.contains("page=2"))
-        assertTrue(recorded.target.contains("per_page=10"))
+        assertEquals("/ping", recorded.target)
     }
 
     @Test
-    fun `getRuns deserializes paginated response`() = runTest {
+    fun `ping deserializes response`() = runTest {
         server.enqueue(
             MockResponse(
                 code = 200,
-                body = """{"data":[{"id":1,"start_time":"2024-01-01T10:00:00Z","distance_km":5.0}],"meta":{"current_page":1,"last_page":1,"per_page":15,"total":1}}""",
+                body = """{"status":"ok"}""",
             )
         )
 
-        val response = service.getRuns()
+        val response = service.ping()
 
         assertTrue(response.isSuccessful)
-        val body = response.body()!!
-        assertEquals(1, body.data.size)
-        assertEquals(1L, body.data[0].id)
-        assertNotNull(body.meta)
-        assertEquals(1, body.meta!!.total)
+        assertEquals("ok", response.body()!!.status)
     }
 
     @Test
     fun `HTTP 401 is returned as unsuccessful response`() = runTest {
         server.enqueue(MockResponse(code = 401, body = """{"message":"Unauthenticated."}"""))
 
-        val response = service.getRuns()
+        val batch = BatchRunRequest(runs = emptyList())
+        val response = service.createRunsBatch(batch)
 
         assertEquals(401, response.code())
         assertTrue(!response.isSuccessful)

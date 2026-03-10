@@ -58,17 +58,8 @@ data class ApiResponse<T>(
 )
 
 @Serializable
-data class RunResponse(
-    val id: Long,
-    @SerialName("start_time") val startTime: String,
-    @SerialName("end_time") val endTime: String? = null,
-    @SerialName("distance_km") val distanceKm: Double,
-    @SerialName("duration_seconds") val durationSeconds: Long? = null,
-    val steps: Long? = null,
-    @SerialName("avg_heart_rate") val avgHeartRate: Long? = null,
-    @SerialName("avg_pace_seconds_per_km") val avgPaceSecondsPerKm: Long? = null,
-    @SerialName("created_at") val createdAt: String? = null,
-    @SerialName("already_synced") val alreadySynced: Boolean? = null,
+data class PingResponse(
+    val status: String,
 )
 
 @Serializable
@@ -84,29 +75,6 @@ data class BatchRunResponseData(
     val created: Int = 0,
     val skipped: Int = 0,
     val results: List<BatchResultItem> = emptyList(),
-)
-
-@Serializable
-data class PaginationMeta(
-    @SerialName("current_page") val currentPage: Int,
-    @SerialName("last_page") val lastPage: Int,
-    @SerialName("per_page") val perPage: Int,
-    val total: Int,
-)
-
-@Serializable
-data class PaginationLinks(
-    val first: String? = null,
-    val last: String? = null,
-    val prev: String? = null,
-    val next: String? = null,
-)
-
-@Serializable
-data class PaginatedResponse<T>(
-    val data: T,
-    val meta: PaginationMeta? = null,
-    val links: PaginationLinks? = null,
 )
 
 // endregion

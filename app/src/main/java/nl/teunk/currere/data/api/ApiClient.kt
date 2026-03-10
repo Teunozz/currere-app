@@ -54,7 +54,7 @@ class ApiClient(
                 .build()
 
             val service = buildService(baseUrl, testClient)
-            val response = service.getRuns(page = 1, perPage = 1)
+            val response = service.ping()
 
             when {
                 response.isSuccessful -> Result.success(Unit)

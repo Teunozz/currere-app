@@ -3,7 +3,6 @@ package nl.teunk.currere.data.api
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ApiModelsTest {
@@ -111,23 +110,10 @@ class ApiModelsTest {
     // region Response DTOs
 
     @Test
-    fun `RunResponse deserializes with nullable fields`() {
-        val jsonStr = """
-            {
-                "id": 42,
-                "start_time": "2024-01-01T10:00:00Z",
-                "distance_km": 5.0
-            }
-        """.trimIndent()
-        val response = json.decodeFromString<RunResponse>(jsonStr)
-        assertEquals(42L, response.id)
-        assertEquals("2024-01-01T10:00:00Z", response.startTime)
-        assertEquals(5.0, response.distanceKm, 0.001)
-        assertNull(response.endTime)
-        assertNull(response.durationSeconds)
-        assertNull(response.steps)
-        assertNull(response.avgHeartRate)
-        assertNull(response.createdAt)
+    fun `PingResponse deserializes correctly`() {
+        val jsonStr = """{"status":"ok"}"""
+        val response = json.decodeFromString<PingResponse>(jsonStr)
+        assertEquals("ok", response.status)
     }
 
     @Test
@@ -148,40 +134,6 @@ class ApiModelsTest {
         assertEquals(0, data.created)
         assertEquals(0, data.skipped)
         assertEquals(emptyList<BatchResultItem>(), data.results)
-    }
-
-    @Test
-    fun `PaginatedResponse deserializes with meta and links`() {
-        val jsonStr = """
-            {
-                "data": [{"id":1,"start_time":"2024-01-01T10:00:00Z","distance_km":5.0}],
-                "meta": {"current_page":1,"last_page":3,"per_page":15,"total":42},
-                "links": {"first":"http://api/runs?page=1","next":"http://api/runs?page=2"}
-            }
-        """.trimIndent()
-        val response = json.decodeFromString<PaginatedResponse<List<RunResponse>>>(jsonStr)
-        assertEquals(1, response.data.size)
-        assertEquals(1, response.meta?.currentPage)
-        assertEquals(3, response.meta?.lastPage)
-        assertEquals(42, response.meta?.total)
-        assertEquals("http://api/runs?page=1", response.links?.first)
-        assertEquals("http://api/runs?page=2", response.links?.next)
-        assertNull(response.links?.prev)
-    }
-
-    @Test
-    fun `ignoreUnknownKeys allows extra fields`() {
-        val jsonStr = """
-            {
-                "id": 1,
-                "start_time": "2024-01-01T10:00:00Z",
-                "distance_km": 5.0,
-                "some_future_field": "value",
-                "another_field": 123
-            }
-        """.trimIndent()
-        val response = json.decodeFromString<RunResponse>(jsonStr)
-        assertEquals(1L, response.id)
     }
 
     // endregion
