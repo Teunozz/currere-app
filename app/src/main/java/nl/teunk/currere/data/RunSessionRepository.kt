@@ -22,6 +22,10 @@ class RunSessionRepository(
     val sessions: Flow<List<RunSession>> = dao.getAllSessions()
         .map { entities -> entities.map { it.toDomain() } }
 
+    suspend fun getAllSessions(): List<RunSession> {
+        return dao.getAllSessionsSnapshot().map { it.toDomain() }
+    }
+
     /**
      * Incremental refresh: fetch only sessions newer than the latest cached end time.
      * If the cache is empty, falls back to a full refresh.
@@ -112,7 +116,7 @@ class RunSessionRepository(
         }
     }
 
-    internal suspend fun cacheDetail(sessionId: String, detail: RunDetail) {
+    private suspend fun cacheDetail(sessionId: String, detail: RunDetail) {
         runDetailDao.cacheRunDetail(
             sessionId = sessionId,
             totalSteps = detail.totalSteps,

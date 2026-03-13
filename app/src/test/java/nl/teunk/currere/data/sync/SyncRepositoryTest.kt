@@ -17,7 +17,6 @@ import nl.teunk.currere.data.api.BatchRunResponseData
 import nl.teunk.currere.data.api.CurrereApiService
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.credentials.ServerCredentials
-import nl.teunk.currere.data.health.HealthConnectSource
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.PaceSplit
 import nl.teunk.currere.domain.model.RunDetail
@@ -35,7 +34,6 @@ class SyncRepositoryTest {
     private val apiClient = mockk<ApiClient>()
     private val syncStatusStore = mockk<SyncStatusStore>(relaxed = true)
     private val credentialsManager = mockk<CredentialsManager>()
-    private val healthConnectSource = mockk<HealthConnectSource>()
     private val runSessionRepository = mockk<RunSessionRepository>(relaxed = true)
     private val apiService = mockk<CurrereApiService>()
 
@@ -45,7 +43,7 @@ class SyncRepositoryTest {
 
     @Before
     fun setUp() {
-        repository = SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource, runSessionRepository)
+        repository = SyncRepository(apiClient, syncStatusStore, credentialsManager, runSessionRepository)
     }
 
     private fun makeSession(id: String) = RunSession(
@@ -138,7 +136,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 1, skipped = 0, results = listOf(
                 BatchResultItem(index = 0, status = "created", id = 100),
@@ -156,7 +154,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 1, skipped = 0, results = listOf(
                 BatchResultItem(index = 0, status = "created", id = 100),
@@ -176,7 +174,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 0, skipped = 1, results = listOf(
                 BatchResultItem(index = 0, status = "skipped", id = 200),
@@ -195,7 +193,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 0, skipped = 0, results = listOf(
                 BatchResultItem(index = 0, status = "error", id = 99),
@@ -217,7 +215,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } throws RuntimeException("HC unavailable")
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } throws RuntimeException("HC unavailable")
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 1, skipped = 0, results = listOf(
                 BatchResultItem(index = 0, status = "created", id = 300),
@@ -244,7 +242,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.error(
             401,
             """{"message":"Unauthenticated."}""".toResponseBody("application/json".toMediaType()),
@@ -261,7 +259,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.error(
             422,
             """{"message":"Validation failed"}""".toResponseBody("application/json".toMediaType()),
@@ -279,7 +277,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } returns Response.error(
             500,
             """{"message":"Internal server error"}""".toResponseBody("application/json".toMediaType()),
@@ -297,7 +295,7 @@ class SyncRepositoryTest {
         setupSyncMap()
 
         val session = makeSession("s1")
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns makeDetail(session)
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns makeDetail(session)
         coEvery { apiService.createRunsBatch(any()) } throws java.io.IOException("Network unreachable")
 
         val result = repository.syncSessions(listOf(session))
@@ -322,7 +320,7 @@ class SyncRepositoryTest {
         val s2 = makeSession("s2")
         val s3 = makeSession("s3")
 
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } answers {
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } answers {
             makeDetail(makeSession("any"))
         }
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
@@ -348,7 +346,7 @@ class SyncRepositoryTest {
         // Create more sessions than the batch size
         val sessions = (1..8).map { makeSession("s$it") }
 
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } answers {
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } answers {
             makeDetail(makeSession("any"))
         }
         coEvery { apiService.createRunsBatch(any()) } answers {
@@ -380,7 +378,7 @@ class SyncRepositoryTest {
 
         val sessions = (1..8).map { makeSession("s$it") }
 
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } answers {
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } answers {
             makeDetail(makeSession("any"))
         }
         // First batch succeeds, second returns 401
@@ -414,16 +412,16 @@ class SyncRepositoryTest {
 
     // endregion
 
-    // region Detail caching during sync
+    // region Detail loading via repository
 
     @Test
-    fun `caches detail data during sync`() = runTest {
+    fun `loads detail via runSessionRepository during sync`() = runTest {
         setupConnected()
         setupSyncMap()
 
         val session = makeSession("s1")
         val detail = makeDetail(session)
-        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns detail
+        coEvery { runSessionRepository.getRunDetail(any(), any(), any()) } returns detail
         coEvery { apiService.createRunsBatch(any()) } returns Response.success(
             ApiResponse(BatchRunResponseData(created = 1, skipped = 0, results = listOf(
                 BatchResultItem(index = 0, status = "created", id = 100),
@@ -432,7 +430,7 @@ class SyncRepositoryTest {
 
         repository.syncSessions(listOf(session))
 
-        coVerify { runSessionRepository.cacheDetail("s1", detail) }
+        coVerify { runSessionRepository.getRunDetail(session.id, session.startTime, session.endTime) }
     }
 
     // endregion

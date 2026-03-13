@@ -40,7 +40,7 @@ class CurrereApp : Application() {
     }
 
     val syncRepository: SyncRepository by lazy {
-        SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource, runSessionRepository)
+        SyncRepository(apiClient, syncStatusStore, credentialsManager, runSessionRepository)
     }
 
     override fun onCreate() {

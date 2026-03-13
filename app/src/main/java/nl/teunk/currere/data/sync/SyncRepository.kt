@@ -8,7 +8,6 @@ import nl.teunk.currere.data.api.PaceSplitRequest
 import nl.teunk.currere.data.api.RunRequest
 import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.credentials.CredentialsManager
-import nl.teunk.currere.data.health.HealthConnectSource
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
 import java.time.ZoneOffset
@@ -25,8 +24,7 @@ class SyncRepository(
     private val apiClient: ApiClient,
     private val syncStatusStore: SyncStatusStore,
     private val credentialsManager: CredentialsManager,
-    private val healthConnectSource: HealthConnectSource,
-    private val runSessionRepository: RunSessionRepository? = null,
+    private val runSessionRepository: RunSessionRepository,
 ) {
 
     private val isoFormatter = DateTimeFormatter.ISO_INSTANT
@@ -52,14 +50,11 @@ class SyncRepository(
 
         val runRequests = unsynced.map { session ->
             try {
-                val detail = healthConnectSource.loadRunDetail(
+                val detail = runSessionRepository.getRunDetail(
                     sessionId = session.id,
                     startTime = session.startTime,
                     endTime = session.endTime,
                 )
-                try {
-                    runSessionRepository?.cacheDetail(session.id, detail)
-                } catch (_: Exception) { }
                 detail.toRunRequest()
             } catch (_: Exception) {
                 session.toRunRequest()

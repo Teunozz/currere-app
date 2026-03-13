@@ -21,7 +21,8 @@ class SyncWorker(
 
     override suspend fun doWork(): Result {
         val app = applicationContext as CurrereApp
-        val sessions = app.healthConnectSource.loadRunSessions()
+        app.runSessionRepository.refreshIncremental()
+        val sessions = app.runSessionRepository.getAllSessions()
         val result = app.syncRepository.syncSessions(sessions)
 
         return when (result) {
