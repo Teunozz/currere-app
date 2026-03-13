@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.api.ApiClient
 import nl.teunk.currere.data.api.ApiResponse
 import nl.teunk.currere.data.api.BatchRunRequest
@@ -35,6 +36,7 @@ class SyncRepositoryTest {
     private val syncStatusStore = mockk<SyncStatusStore>(relaxed = true)
     private val credentialsManager = mockk<CredentialsManager>()
     private val healthConnectSource = mockk<HealthConnectSource>()
+    private val runSessionRepository = mockk<RunSessionRepository>(relaxed = true)
     private val apiService = mockk<CurrereApiService>()
 
     private lateinit var repository: SyncRepository
@@ -43,7 +45,7 @@ class SyncRepositoryTest {
 
     @Before
     fun setUp() {
-        repository = SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource)
+        repository = SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource, runSessionRepository)
     }
 
     private fun makeSession(id: String) = RunSession(
@@ -408,6 +410,29 @@ class SyncRepositoryTest {
 
         assertEquals(SyncResult.Unauthorized, result)
         coVerify(exactly = 2) { apiService.createRunsBatch(any()) }
+    }
+
+    // endregion
+
+    // region Detail caching during sync
+
+    @Test
+    fun `caches detail data during sync`() = runTest {
+        setupConnected()
+        setupSyncMap()
+
+        val session = makeSession("s1")
+        val detail = makeDetail(session)
+        coEvery { healthConnectSource.loadRunDetail(any(), any(), any()) } returns detail
+        coEvery { apiService.createRunsBatch(any()) } returns Response.success(
+            ApiResponse(BatchRunResponseData(created = 1, skipped = 0, results = listOf(
+                BatchResultItem(index = 0, status = "created", id = 100),
+            ))),
+        )
+
+        repository.syncSessions(listOf(session))
+
+        coVerify { runSessionRepository.cacheDetail("s1", detail) }
     }
 
     // endregion

@@ -3,7 +3,7 @@ package nl.teunk.currere.ui.detail
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import nl.teunk.currere.data.health.HealthConnectSource
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
@@ -21,7 +21,7 @@ class DetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val healthConnectSource = mockk<HealthConnectSource>()
+    private val runSessionRepository = mockk<RunSessionRepository>()
 
     private val sessionId = "session-123"
     private val startTime = Instant.parse("2024-01-01T10:00:00Z")
@@ -47,10 +47,10 @@ class DetailViewModelTest {
     )
 
     @Test
-    fun `emits Success when loadRunDetail succeeds`() {
-        coEvery { healthConnectSource.loadRunDetail(sessionId, startTime, endTime) } returns sampleDetail
+    fun `emits Success when getRunDetail succeeds`() {
+        coEvery { runSessionRepository.getRunDetail(sessionId, startTime, endTime) } returns sampleDetail
 
-        val viewModel = DetailViewModel(healthConnectSource, sessionId, startTime, endTime)
+        val viewModel = DetailViewModel(runSessionRepository, sessionId, startTime, endTime)
 
         val state = viewModel.uiState.value
         assertTrue(state is DetailUiState.Success)
@@ -58,11 +58,11 @@ class DetailViewModelTest {
     }
 
     @Test
-    fun `emits Error when loadRunDetail throws`() {
-        coEvery { healthConnectSource.loadRunDetail(sessionId, startTime, endTime) } throws
+    fun `emits Error when getRunDetail throws`() {
+        coEvery { runSessionRepository.getRunDetail(sessionId, startTime, endTime) } throws
             RuntimeException("Health Connect unavailable")
 
-        val viewModel = DetailViewModel(healthConnectSource, sessionId, startTime, endTime)
+        val viewModel = DetailViewModel(runSessionRepository, sessionId, startTime, endTime)
 
         val state = viewModel.uiState.value
         assertTrue(state is DetailUiState.Error)
@@ -71,10 +71,10 @@ class DetailViewModelTest {
 
     @Test
     fun `emits Error with default message when exception has no message`() {
-        coEvery { healthConnectSource.loadRunDetail(sessionId, startTime, endTime) } throws
+        coEvery { runSessionRepository.getRunDetail(sessionId, startTime, endTime) } throws
             RuntimeException()
 
-        val viewModel = DetailViewModel(healthConnectSource, sessionId, startTime, endTime)
+        val viewModel = DetailViewModel(runSessionRepository, sessionId, startTime, endTime)
 
         val state = viewModel.uiState.value
         assertTrue(state is DetailUiState.Error)

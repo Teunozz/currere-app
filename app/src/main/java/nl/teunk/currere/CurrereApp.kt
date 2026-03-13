@@ -24,7 +24,7 @@ class CurrereApp : Application() {
     }
 
     val runSessionRepository: RunSessionRepository by lazy {
-        RunSessionRepository(database.runSessionDao(), healthConnectSource)
+        RunSessionRepository(database.runSessionDao(), database.runDetailDao(), healthConnectSource)
     }
 
     val credentialsManager: CredentialsManager by lazy {
@@ -40,7 +40,7 @@ class CurrereApp : Application() {
     }
 
     val syncRepository: SyncRepository by lazy {
-        SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource)
+        SyncRepository(apiClient, syncStatusStore, credentialsManager, healthConnectSource, runSessionRepository)
     }
 
     override fun onCreate() {

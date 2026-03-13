@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import nl.teunk.currere.data.health.HealthConnectSource
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.domain.model.RunDetail
 import java.time.Instant
 
@@ -17,7 +17,7 @@ sealed interface DetailUiState {
 }
 
 class DetailViewModel(
-    private val healthConnectSource: HealthConnectSource,
+    private val runSessionRepository: RunSessionRepository,
     private val sessionId: String,
     private val startTime: Instant,
     private val endTime: Instant,
@@ -33,7 +33,7 @@ class DetailViewModel(
     private fun loadDetail() {
         viewModelScope.launch {
             try {
-                val detail = healthConnectSource.loadRunDetail(sessionId, startTime, endTime)
+                val detail = runSessionRepository.getRunDetail(sessionId, startTime, endTime)
                 _uiState.value = DetailUiState.Success(detail)
             } catch (e: Exception) {
                 _uiState.value = DetailUiState.Error(e.message ?: "Failed to load run detail")

@@ -6,6 +6,7 @@ import nl.teunk.currere.data.api.BatchRunRequest
 import nl.teunk.currere.data.api.HeartRateSampleRequest
 import nl.teunk.currere.data.api.PaceSplitRequest
 import nl.teunk.currere.data.api.RunRequest
+import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.health.HealthConnectSource
 import nl.teunk.currere.domain.model.RunDetail
@@ -25,6 +26,7 @@ class SyncRepository(
     private val syncStatusStore: SyncStatusStore,
     private val credentialsManager: CredentialsManager,
     private val healthConnectSource: HealthConnectSource,
+    private val runSessionRepository: RunSessionRepository? = null,
 ) {
 
     private val isoFormatter = DateTimeFormatter.ISO_INSTANT
@@ -55,6 +57,9 @@ class SyncRepository(
                     startTime = session.startTime,
                     endTime = session.endTime,
                 )
+                try {
+                    runSessionRepository?.cacheDetail(session.id, detail)
+                } catch (_: Exception) { }
                 detail.toRunRequest()
             } catch (_: Exception) {
                 session.toRunRequest()

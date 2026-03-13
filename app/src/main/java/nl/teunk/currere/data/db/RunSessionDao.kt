@@ -13,6 +13,9 @@ interface RunSessionDao {
     @Query("SELECT * FROM run_sessions ORDER BY startTimeEpochMillis DESC")
     fun getAllSessions(): Flow<List<RunSessionEntity>>
 
+    @Query("SELECT * FROM run_sessions WHERE id = :id")
+    suspend fun getById(id: String): RunSessionEntity?
+
     @Query("SELECT MAX(endTimeEpochMillis) FROM run_sessions")
     suspend fun getLatestEndTimeMillis(): Long?
 

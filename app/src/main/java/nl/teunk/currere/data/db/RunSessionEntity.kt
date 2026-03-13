@@ -16,6 +16,7 @@ data class RunSessionEntity(
     val averagePaceSecondsPerKm: Double?,
     val averageHeartRateBpm: Long?,
     val title: String,
+    val totalSteps: Long? = null,
 ) {
     fun toDomain(): RunSession = RunSession(
         id = id,

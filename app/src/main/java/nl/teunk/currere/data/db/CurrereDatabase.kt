@@ -5,9 +5,19 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [RunSessionEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        RunSessionEntity::class,
+        HeartRateSampleEntity::class,
+        PaceSampleEntity::class,
+        PaceSplitEntity::class,
+    ],
+    version = 1,
+    exportSchema = false,
+)
 abstract class CurrereDatabase : RoomDatabase() {
     abstract fun runSessionDao(): RunSessionDao
+    abstract fun runDetailDao(): RunDetailDao
 
     companion object {
         @Volatile

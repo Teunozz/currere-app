@@ -114,7 +114,7 @@ fun CurrereNavGraph() {
             val route = backStackEntry.toRoute<DetailRoute>()
             val detailViewModel: DetailViewModel = viewModel {
                 DetailViewModel(
-                    healthConnectSource = app.healthConnectSource,
+                    runSessionRepository = app.runSessionRepository,
                     sessionId = route.sessionId,
                     startTime = Instant.ofEpochMilli(route.startTimeEpochMilli),
                     endTime = Instant.ofEpochMilli(route.endTimeEpochMilli),
