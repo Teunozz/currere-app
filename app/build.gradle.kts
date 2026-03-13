@@ -87,10 +87,11 @@ dependencies {
     // WorkManager
     implementation(libs.work.runtime.ktx)
 
-    // Room
+    // Room + SQLCipher
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.sqlcipher.android)
 
     // CameraX + ML Kit
     implementation(libs.camerax.core)

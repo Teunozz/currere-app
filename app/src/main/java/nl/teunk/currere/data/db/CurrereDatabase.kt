@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 
 @Database(
     entities = [
@@ -23,13 +24,18 @@ abstract class CurrereDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: CurrereDatabase? = null
 
-        fun getInstance(context: Context): CurrereDatabase {
+        fun getInstance(
+            context: Context,
+            factory: SupportSQLiteOpenHelper.Factory? = null,
+        ): CurrereDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     CurrereDatabase::class.java,
                     "currere.db",
-                ).build().also { INSTANCE = it }
+                ).apply {
+                    if (factory != null) openHelperFactory(factory)
+                }.build().also { INSTANCE = it }
             }
         }
     }

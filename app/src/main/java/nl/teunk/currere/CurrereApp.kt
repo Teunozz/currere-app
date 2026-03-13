@@ -9,9 +9,11 @@ import nl.teunk.currere.data.api.ApiClient
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.db.CurrereDatabase
 import nl.teunk.currere.data.health.HealthConnectSource
+import nl.teunk.currere.data.security.PassphraseProvider
 import nl.teunk.currere.data.sync.SyncRepository
 import nl.teunk.currere.data.sync.SyncStatusStore
 import nl.teunk.currere.data.sync.SyncWorker
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 class CurrereApp : Application() {
 
@@ -20,7 +22,10 @@ class CurrereApp : Application() {
     }
 
     val database: CurrereDatabase by lazy {
-        CurrereDatabase.getInstance(this)
+        System.loadLibrary("sqlcipher")
+        val passphrase = PassphraseProvider.getPassphrase(this)
+        val factory = SupportOpenHelperFactory(passphrase)
+        CurrereDatabase.getInstance(this, factory)
     }
 
     val runSessionRepository: RunSessionRepository by lazy {

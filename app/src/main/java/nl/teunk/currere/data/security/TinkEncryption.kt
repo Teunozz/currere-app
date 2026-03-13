@@ -1,4 +1,4 @@
-package nl.teunk.currere.data.credentials
+package nl.teunk.currere.data.security
 
 import android.content.Context
 import com.google.crypto.tink.Aead
@@ -11,24 +11,26 @@ import androidx.core.content.edit
 
 object TinkEncryption {
 
-    private const val KEYSET_NAME = "currere_credentials_keyset"
-    private const val PREF_FILE_NAME = "currere_credentials_keyset_prefs"
     private const val MASTER_KEY_ALIAS = "currere_master_key"
     private const val MASTER_KEY_URI = "android-keystore://$MASTER_KEY_ALIAS"
 
-    fun getAead(context: Context): Aead {
+    fun getAead(
+        context: Context,
+        keysetName: String = "currere_credentials_keyset",
+        prefFileName: String = "currere_credentials_keyset_prefs",
+    ): Aead {
         AeadConfig.register()
         return try {
-            buildAead(context)
+            buildAead(context, keysetName, prefFileName)
         } catch (_: Exception) {
-            clearCorruptedKey(context)
-            buildAead(context)
+            clearCorruptedKey(context, prefFileName)
+            buildAead(context, keysetName, prefFileName)
         }
     }
 
-    private fun buildAead(context: Context): Aead {
+    private fun buildAead(context: Context, keysetName: String, prefFileName: String): Aead {
         val keysetHandle = AndroidKeysetManager.Builder()
-            .withSharedPref(context, KEYSET_NAME, PREF_FILE_NAME)
+            .withSharedPref(context, keysetName, prefFileName)
             .withKeyTemplate(KeyTemplates.get("AES256_GCM"))
             .withMasterKeyUri(MASTER_KEY_URI)
             .build()
@@ -36,10 +38,10 @@ object TinkEncryption {
         return keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead::class.java)
     }
 
-    private fun clearCorruptedKey(context: Context) {
+    private fun clearCorruptedKey(context: Context, prefFileName: String) {
         val keyStore = KeyStore.getInstance("AndroidKeyStore")
         keyStore.load(null)
         keyStore.deleteEntry(MASTER_KEY_ALIAS)
-        context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE).edit { clear() }
+        context.getSharedPreferences(prefFileName, Context.MODE_PRIVATE).edit { clear() }
     }
 }

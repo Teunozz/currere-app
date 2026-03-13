@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
 import com.google.crypto.tink.Aead
 import kotlinx.coroutines.flow.Flow
+import nl.teunk.currere.data.security.TinkEncryption
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
