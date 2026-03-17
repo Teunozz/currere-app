@@ -19,4 +19,9 @@ object DateFormatters {
     val dateTimeCompact: DateTimeFormatter = DateTimeFormatter
         .ofPattern("EEE d MMM yyyy, HH:mm", Locale.US)
         .withZone(ZoneId.systemDefault())
+
+    /** e.g. "28 Feb, 14:30" */
+    val dateShort: DateTimeFormatter = DateTimeFormatter
+        .ofPattern("d MMM, HH:mm", Locale.US)
+        .withZone(ZoneId.systemDefault())
 }

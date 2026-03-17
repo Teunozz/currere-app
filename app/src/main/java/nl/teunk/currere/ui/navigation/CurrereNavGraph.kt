@@ -21,6 +21,7 @@ import nl.teunk.currere.ui.detail.DetailScreen
 import nl.teunk.currere.ui.detail.DetailViewModel
 import nl.teunk.currere.ui.diary.DiaryScreen
 import nl.teunk.currere.ui.diary.DiaryViewModel
+import nl.teunk.currere.ui.history.RunHistoryScreen
 import nl.teunk.currere.ui.permission.HEALTH_PERMISSIONS
 import nl.teunk.currere.ui.permission.PermissionScreen
 import nl.teunk.currere.ui.scanner.QrScannerScreen
@@ -86,7 +87,10 @@ fun CurrereNavGraph() {
         }
 
         composable<DiaryRoute> {
-            val diaryViewModel: DiaryViewModel = viewModel {
+            val diaryViewModel: DiaryViewModel = viewModel(
+                viewModelStoreOwner = it,
+                key = "diary",
+            ) {
                 DiaryViewModel(
                     runSessionRepository = app.runSessionRepository,
                     syncStatusStore = app.syncStatusStore,
@@ -107,6 +111,35 @@ fun CurrereNavGraph() {
                 onSettingsClick = {
                     navController.navigate(SettingsRoute)
                 },
+                onShowAllRuns = {
+                    navController.navigate(RunHistoryRoute)
+                },
+            )
+        }
+
+        composable<RunHistoryRoute> {
+            val diaryViewModel: DiaryViewModel = viewModel(
+                viewModelStoreOwner = navController.getBackStackEntry<DiaryRoute>(),
+                key = "diary",
+            ) {
+                DiaryViewModel(
+                    runSessionRepository = app.runSessionRepository,
+                    syncStatusStore = app.syncStatusStore,
+                    appContext = app,
+                )
+            }
+            RunHistoryScreen(
+                viewModel = diaryViewModel,
+                onRunClick = { session ->
+                    navController.navigate(
+                        DetailRoute(
+                            sessionId = session.id,
+                            startTimeEpochMilli = session.startTime.toEpochMilli(),
+                            endTimeEpochMilli = session.endTime.toEpochMilli(),
+                        )
+                    )
+                },
+                onBack = { navController.popBackStack() },
             )
         }
 

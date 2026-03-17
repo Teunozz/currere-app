@@ -23,3 +23,6 @@ object QrScannerRoute
 
 @Serializable
 object ManualSetupRoute
+
+@Serializable
+object RunHistoryRoute
