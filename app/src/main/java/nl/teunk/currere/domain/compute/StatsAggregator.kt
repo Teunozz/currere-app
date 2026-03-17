@@ -46,6 +46,23 @@ object StatsAggregator {
     }
 
     /**
+     * Format a Duration as a compact long-form string.
+     * e.g. "4d 5h 41m", "2h 30m", "45m"
+     */
+    fun formatDurationLong(duration: Duration): String {
+        val totalMinutes = duration.toMinutes()
+        val days = totalMinutes / (24 * 60)
+        val hours = (totalMinutes % (24 * 60)) / 60
+        val minutes = totalMinutes % 60
+
+        return buildString {
+            if (days > 0) append("${days}d ")
+            if (days > 0 || hours > 0) append("${hours}h ")
+            append("${minutes}m")
+        }
+    }
+
+    /**
      * Derive TimeOfDay from an Instant using the device's default timezone.
      * Morning: 05:00–11:59, Afternoon: 12:00–16:59,
      * Evening: 17:00–20:59, Night: 21:00–04:59

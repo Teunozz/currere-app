@@ -8,6 +8,7 @@ import nl.teunk.currere.data.db.PaceSplitEntity
 import nl.teunk.currere.data.db.RunDetailDao
 import nl.teunk.currere.data.db.RunSessionDao
 import nl.teunk.currere.data.db.RunSessionEntity
+import nl.teunk.currere.data.db.RunningStatsRaw
 import nl.teunk.currere.data.health.HealthConnectSource
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
@@ -21,6 +22,8 @@ class RunSessionRepository(
 
     val sessions: Flow<List<RunSession>> = dao.getAllSessions()
         .map { entities -> entities.map { it.toDomain() } }
+
+    val stats: Flow<RunningStatsRaw?> = dao.getAggregateStats()
 
     suspend fun getAllSessions(): List<RunSession> {
         return dao.getAllSessionsSnapshot().map { it.toDomain() }

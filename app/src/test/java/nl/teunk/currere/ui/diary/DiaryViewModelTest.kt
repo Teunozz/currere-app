@@ -47,6 +47,7 @@ class DiaryViewModelTest {
         every { SyncWorker.enqueueOneTime(any()) } returns Unit
 
         every { repository.sessions } returns sessionsFlow
+        every { repository.stats } returns flowOf(null)
         every { syncStatusStore.syncMap } returns flowOf(emptyMap())
         coEvery { repository.refreshIncremental() } returns Unit
     }

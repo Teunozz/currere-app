@@ -13,6 +13,23 @@ interface RunSessionDao {
     @Query("SELECT * FROM run_sessions ORDER BY startTimeEpochMillis DESC")
     fun getAllSessions(): Flow<List<RunSessionEntity>>
 
+    @Query(
+        """
+        SELECT
+            AVG(rs.distanceMeters) AS avgDistance,
+            MAX(rs.distanceMeters) AS maxDistance,
+            SUM(rs.distanceMeters) AS totalDistance,
+            AVG(rs.averagePaceSecondsPerKm) AS avgPace,
+            (SELECT MIN(ps.secondsPerKm) FROM pace_samples ps) AS fastestPace,
+            AVG(rs.averageHeartRateBpm) AS avgHeartRate,
+            (SELECT MAX(hrs.bpm) FROM heart_rate_samples hrs) AS highestHeartRate,
+            COUNT(*) AS totalRuns,
+            SUM(rs.activeDurationSeconds) AS totalDurationSeconds
+        FROM run_sessions rs
+        """
+    )
+    fun getAggregateStats(): Flow<RunningStatsRaw?>
+
     @Query("SELECT * FROM run_sessions ORDER BY startTimeEpochMillis DESC")
     suspend fun getAllSessionsSnapshot(): List<RunSessionEntity>
 

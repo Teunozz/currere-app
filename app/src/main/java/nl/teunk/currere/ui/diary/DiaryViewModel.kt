@@ -15,6 +15,8 @@ import nl.teunk.currere.data.sync.SyncRecord
 import nl.teunk.currere.data.sync.SyncStatusStore
 import nl.teunk.currere.data.sync.SyncWorker
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.RunningStats
+import nl.teunk.currere.domain.model.toFormatted
 
 data class DiaryRunItem(
     val session: RunSession,
@@ -24,7 +26,10 @@ data class DiaryRunItem(
 sealed interface DiaryUiState {
     data object Loading : DiaryUiState
     data object Empty : DiaryUiState
-    data class Success(val items: List<DiaryRunItem>) : DiaryUiState
+    data class Success(
+        val items: List<DiaryRunItem>,
+        val stats: RunningStats? = null,
+    ) : DiaryUiState
 }
 
 class DiaryViewModel(
@@ -39,17 +44,19 @@ class DiaryViewModel(
         runSessionRepository.sessions,
         _isInitialLoad,
         syncStatusStore.syncMap,
-    ) { sessions, isInitialLoad, syncMap ->
+        runSessionRepository.stats,
+    ) { sessions, isInitialLoad, syncMap, statsRaw ->
         when {
             isInitialLoad && sessions.isEmpty() -> DiaryUiState.Loading
             sessions.isEmpty() -> DiaryUiState.Empty
             else -> DiaryUiState.Success(
-                sessions.map { session ->
+                items = sessions.map { session ->
                     DiaryRunItem(
                         session = session,
                         syncRecord = syncMap[session.id],
                     )
-                }
+                },
+                stats = statsRaw?.toFormatted(),
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DiaryUiState.Loading)

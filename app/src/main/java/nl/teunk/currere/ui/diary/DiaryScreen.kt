@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.RunningStats
 import nl.teunk.currere.ui.components.EmptyState
 import nl.teunk.currere.ui.preview.SampleRunSessions
 import nl.teunk.currere.ui.theme.CurrereTheme
@@ -111,9 +112,14 @@ fun DiaryScreenContent(
 
                 is DiaryUiState.Success -> {
                     LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        uiState.stats?.let { stats ->
+                            item(key = "statistics") {
+                                StatisticsSection(stats = stats)
+                            }
+                        }
                         items(
                             items = uiState.items,
                             key = { it.session.id },
@@ -122,6 +128,7 @@ fun DiaryScreenContent(
                                 session = item.session,
                                 syncRecord = item.syncRecord,
                                 onClick = { onRunClick(item.session) },
+                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
                     }
@@ -136,7 +143,20 @@ fun DiaryScreenContent(
 private fun DiaryScreenSuccessPreview() {
     CurrereTheme {
         DiaryScreenContent(
-            uiState = DiaryUiState.Success(SampleRunSessions),
+            uiState = DiaryUiState.Success(
+                items = SampleRunSessions,
+                stats = RunningStats(
+                    avgDistanceKm = "7.80",
+                    longestDistanceKm = "15.01",
+                    totalDistanceKm = "234.50",
+                    avgPace = "5:12",
+                    fastestPace = "4:15",
+                    avgHeartRate = "152",
+                    highestHeartRate = "189",
+                    totalRuns = "30",
+                    totalTime = "4d 5h 41m",
+                ),
+            ),
             isRefreshing = false,
             onRefresh = {},
             onRunClick = {},
