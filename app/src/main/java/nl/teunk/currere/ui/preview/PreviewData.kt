@@ -88,3 +88,11 @@ val SampleRunDetail = RunDetail(
     paceSamples = SamplePaceSamples,
     splits = SampleSplits,
 )
+
+val SamplePaceRunSessions = listOf(
+    RunSession("1", sampleStart, sampleEnd, 0.0, Duration.ZERO, 302.0, 0, ""),
+    RunSession("2", sampleStart, sampleEnd, 0.0, Duration.ZERO, 330.0, 0, ""),
+    RunSession("3", sampleStart, sampleEnd, 0.0, Duration.ZERO, 288.0, 0, ""),
+    RunSession("4", sampleStart, sampleEnd, 0.0, Duration.ZERO, 327.0, 0, ""),
+    RunSession("5", sampleStart, sampleEnd, 0.0, Duration.ZERO, 315.0, 0, ""),
+)

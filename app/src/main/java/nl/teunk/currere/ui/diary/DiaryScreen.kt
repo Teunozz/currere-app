@@ -143,6 +143,11 @@ fun DiaryScreenContent(
                                 onShowAllRuns = onShowAllRuns,
                             )
                         }
+                        item(key = "pace_chart") {
+                            PaceBarChart(
+                                runs = uiState.items.take(5).map { it.session },
+                            )
+                        }
                         uiState.stats?.let { stats ->
                             item(key = "statistics") {
                                 StatisticsSection(stats = stats)
