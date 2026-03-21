@@ -16,7 +16,7 @@ object OutlierFilter {
     }
 
     fun movingAverage(values: List<Double>, window: Int): List<Double> {
-        if (values.size <= window) return List(values.size) { values.average() }
+        if (values.size < window * 3) return values
         val half = window / 2
         return values.indices.map { i ->
             val from = (i - half).coerceAtLeast(0)
