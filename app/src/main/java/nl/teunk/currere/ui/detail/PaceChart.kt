@@ -37,6 +37,7 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.Fill
+import nl.teunk.currere.domain.compute.OutlierFilter
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.PaceSample
 import nl.teunk.currere.ui.preview.SamplePaceSamples
@@ -50,6 +51,7 @@ import kotlin.math.abs
 internal data class PaceChartData(
     val xValues: List<Long>,
     val yValues: List<Double>,
+    val smoothedYValues: List<Double>,
     val splitYValue: Double,
 )
 
@@ -58,10 +60,12 @@ internal fun preparePaceData(
     samples: List<PaceSample>,
     sessionStartTime: Instant,
 ): PaceChartData {
-    val yValues = samples.map { -it.secondsPerKm }
+    val yValues = OutlierFilter.clampOutliers(samples.map { -it.secondsPerKm }, multiplier = 3.0)
+    val smoothed = OutlierFilter.movingAverage(yValues, window = 21)
     return PaceChartData(
         xValues = samples.map { Duration.between(sessionStartTime, it.time).seconds },
         yValues = yValues,
+        smoothedYValues = smoothed,
         splitYValue = yValues.min() - 50.0,
     )
 }
@@ -79,21 +83,21 @@ fun PaceChart(
     val avgPaceFormatted = averagePaceSecondsPerKm?.let { StatsAggregator.formatPace(it) } ?: "—"
     val chartDescription = stringResource(R.string.pace_chart_description, avgPaceFormatted)
 
-    val (xValues, yValues, splitYValue) = remember(samples, sessionStartTime) {
+    val chartData = remember(samples, sessionStartTime) {
         preparePaceData(samples, sessionStartTime)
     }
 
-    val avgValue = remember(yValues) { yValues.average() }
+    val avgValue = remember(chartData.yValues) { chartData.yValues.average() }
 
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
-            series(x = xValues, y = yValues)
+            series(x = chartData.xValues, y = chartData.smoothedYValues)
             series(x = listOf(0L, totalDurationSeconds), y = listOf(avgValue, avgValue))
         }
     )
 
-    val rangeProvider = remember(yValues) {
-        ChartDefaults.centeredRangeProvider(yValues, padding = 20.0)
+    val rangeProvider = remember(chartData.yValues) {
+        ChartDefaults.centeredRangeProvider(chartData.yValues, padding = 20.0)
     }
 
     val labelSpacingMinutes = remember(totalDurationSeconds) {
@@ -166,9 +170,10 @@ fun PaceChart(
                                         )
                                     )
                                 ),
-                                splitY = { splitYValue },
+                                splitY = { chartData.splitYValue },
                             ),
                         ),
+                        // Avg line – invisible
                         LineCartesianLayer.rememberLine(
                             fill = remember { LineCartesianLayer.LineFill.single(Fill(Color.Transparent)) },
                             stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.dp),

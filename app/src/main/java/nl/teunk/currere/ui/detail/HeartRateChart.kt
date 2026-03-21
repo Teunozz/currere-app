@@ -37,6 +37,7 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLa
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.Fill
+import nl.teunk.currere.domain.compute.OutlierFilter
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.ui.preview.SampleHeartRateSamples
 import nl.teunk.currere.ui.preview.SampleRunSession
@@ -74,7 +75,9 @@ fun HeartRateChart(
         downsampleHeartRate(samples, sessionStartTime)
     }
 
-    val hrValues = remember(downsampled) { downsampled.map { it.second } }
+    val hrValues = remember(downsampled) {
+        OutlierFilter.clampOutliers(downsampled.map { it.second })
+    }
     val avgValue = remember(hrValues) { hrValues.average() }
     val rangeProvider = remember(hrValues) {
         ChartDefaults.centeredRangeProvider(hrValues, padding = 5.0)
@@ -82,7 +85,7 @@ fun HeartRateChart(
 
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
-            series(x = downsampled.map { it.first }, y = downsampled.map { it.second })
+            series(x = downsampled.map { it.first }, y = hrValues)
             series(x = listOf(0L, totalDurationSeconds), y = listOf(avgValue, avgValue))
         }
     )
