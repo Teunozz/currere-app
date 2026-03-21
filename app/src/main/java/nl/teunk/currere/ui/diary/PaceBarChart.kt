@@ -36,9 +36,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunSession
 import nl.teunk.currere.ui.preview.SamplePaceRunSessions
@@ -55,19 +57,18 @@ import java.util.Locale
 private const val SLOT_COUNT = 5
 private val BAR_WIDTH_DP = 12.dp
 
-private val chartDateFormatter: DateTimeFormatter = DateTimeFormatter
-    .ofPattern("d MMM", Locale.US)
-    .withZone(ZoneId.systemDefault())
-
 private data class BarSlot(
     val paceSeconds: Double?,
     val dateLabel: String?,
     val paceFormatted: String?,
 )
 
-private fun formatDateLabel(startTime: Instant): String {
+private fun formatDateLabel(startTime: Instant, todayLabel: String): String {
     val runDate = startTime.atZone(ZoneId.systemDefault()).toLocalDate()
-    return if (runDate == LocalDate.now()) "Today" else chartDateFormatter.format(startTime)
+    if (runDate == LocalDate.now()) return todayLabel
+    val formatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
+        .withZone(ZoneId.systemDefault())
+    return formatter.format(startTime)
 }
 
 private enum class PaceTrend { FASTER, SLOWER, SAME }
@@ -77,8 +78,10 @@ fun PaceBarChart(
     runs: List<RunSession>,
     modifier: Modifier = Modifier,
 ) {
+    val todayLabel = stringResource(R.string.today)
+
     // Build exactly SLOT_COUNT slots, newest on the right
-    val slots = remember(runs) {
+    val slots = remember(runs, todayLabel) {
         val recent = runs.take(SLOT_COUNT)
         val reversed = recent.reversed() // oldest first → newest last (rightmost)
         List(SLOT_COUNT) { index ->
@@ -86,7 +89,7 @@ fun PaceBarChart(
             val session = reversed.getOrNull(index - offset)
             BarSlot(
                 paceSeconds = session?.averagePaceSecondsPerKm,
-                dateLabel = session?.let { formatDateLabel(it.startTime) },
+                dateLabel = session?.let { formatDateLabel(it.startTime, todayLabel) },
                 paceFormatted = session?.averagePaceSecondsPerKm?.let {
                     StatsAggregator.formatPace(it)
                 },
@@ -149,7 +152,7 @@ fun PaceBarChart(
     ) {
         Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 16.dp)) {
             Text(
-                text = "Recent Pace",
+                text = stringResource(R.string.recent_pace),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = onSurfaceVariant,
@@ -173,7 +176,7 @@ fun PaceBarChart(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = "/km",
+                            text = stringResource(R.string.unit_per_km),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Normal,
                             color = onSurfaceVariant,
@@ -198,9 +201,9 @@ fun PaceBarChart(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = when (trend) {
-                                    PaceTrend.FASTER -> "Pace improving"
-                                    PaceTrend.SLOWER -> "Pace declining"
-                                    PaceTrend.SAME -> "Pace stable"
+                                    PaceTrend.FASTER -> stringResource(R.string.pace_improving)
+                                    PaceTrend.SLOWER -> stringResource(R.string.pace_declining)
+                                    PaceTrend.SAME -> stringResource(R.string.pace_stable)
                                 },
                                 tint = tint,
                                 modifier = Modifier.size(16.dp),

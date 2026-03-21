@@ -24,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.ui.theme.CurrereTheme
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
@@ -101,7 +103,7 @@ fun PermissionScreenContent(
         Spacer(Modifier.height(24.dp))
 
         Text(
-            text = "Health Connect permissions required",
+            text = stringResource(R.string.permission_title),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
@@ -109,7 +111,7 @@ fun PermissionScreenContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Currere needs read access to your exercise sessions, distance, steps, heart rate, and speed data to display your running activity.",
+            text = stringResource(R.string.permission_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -119,13 +121,13 @@ fun PermissionScreenContent(
 
         if (permissionDenied) {
             Button(onClick = onOpenSettings) {
-                Text("Open Health Connect settings")
+                Text(stringResource(R.string.open_health_connect_settings))
             }
 
             Spacer(Modifier.height(12.dp))
 
             OutlinedButton(onClick = onTryAgain) {
-                Text("Try again")
+                Text(stringResource(R.string.try_again))
             }
         }
     }

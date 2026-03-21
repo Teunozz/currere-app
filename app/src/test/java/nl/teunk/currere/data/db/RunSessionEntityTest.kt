@@ -1,6 +1,8 @@
 package nl.teunk.currere.data.db
 
+import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.TimeOfDay
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -17,7 +19,7 @@ class RunSessionEntityTest {
         activeDurationSeconds = 1800L,
         averagePaceSecondsPerKm = 360.0,
         averageHeartRateBpm = 155L,
-        title = "Morning run",
+        title = "MORNING",
     )
 
     private val sampleDomain = RunSession(
@@ -28,7 +30,7 @@ class RunSessionEntityTest {
         activeDuration = Duration.ofSeconds(1800L),
         averagePaceSecondsPerKm = 360.0,
         averageHeartRateBpm = 155L,
-        title = "Morning run",
+        timeOfDay = TimeOfDay.MORNING,
     )
 
     @Test
@@ -51,7 +53,15 @@ class RunSessionEntityTest {
         assertEquals(5000.0, domain.distanceMeters, 0.001)
         assertEquals(360.0, domain.averagePaceSecondsPerKm!!, 0.001)
         assertEquals(155L, domain.averageHeartRateBpm)
-        assertEquals("Morning run", domain.title)
+        assertEquals(TimeOfDay.MORNING, domain.timeOfDay)
+    }
+
+    @Test
+    fun `toDomain falls back to deriving TimeOfDay from startTime for unknown title`() {
+        val entity = sampleEntity.copy(title = "Morning run")
+        val domain = entity.toDomain()
+        val expected = StatsAggregator.timeOfDay(Instant.ofEpochMilli(entity.startTimeEpochMillis))
+        assertEquals(expected, domain.timeOfDay)
     }
 
     @Test

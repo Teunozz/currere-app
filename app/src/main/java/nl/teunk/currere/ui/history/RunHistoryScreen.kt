@@ -21,7 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.model.RunSession
 import nl.teunk.currere.ui.diary.DiaryUiState
 import nl.teunk.currere.ui.diary.DiaryViewModel
@@ -40,12 +42,12 @@ fun RunHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Run History") },
+                title = { Text(stringResource(R.string.run_history)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
                 },

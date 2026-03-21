@@ -28,8 +28,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.ui.theme.CurrereTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,10 +84,10 @@ private fun ManualSetupContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Connect to Server") },
+                title = { Text(stringResource(R.string.connect_to_server)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -105,7 +107,7 @@ private fun ManualSetupContent(
             OutlinedTextField(
                 value = serverUrl,
                 onValueChange = onServerUrlChange,
-                label = { Text("Server URL") },
+                label = { Text(stringResource(R.string.server_url)) },
                 placeholder = { Text("https://your-server.com") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -115,7 +117,7 @@ private fun ManualSetupContent(
             OutlinedTextField(
                 value = token,
                 onValueChange = onTokenChange,
-                label = { Text("API Token") },
+                label = { Text(stringResource(R.string.api_token)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state !is SetupState.Testing,
@@ -142,7 +144,7 @@ private fun ManualSetupContent(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Connect")
+                    Text(stringResource(R.string.connect))
                 }
             }
         }

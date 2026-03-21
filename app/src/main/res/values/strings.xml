@@ -1,3 +1,116 @@
 <resources>
     <string name="app_name">Currere</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="settings">Settings</string>
+    <string name="cancel">Cancel</string>
+    <string name="unit_km">km</string>
+    <string name="unit_per_km">/km</string>
+    <string name="unit_bpm">bpm</string>
+    <string name="label_avg">(avg)</string>
+
+    <!-- Format strings for value + unit combinations -->
+    <string name="format_km">%s km</string>
+    <string name="format_pace_per_km">%s /km</string>
+    <string name="format_bpm_int">%d bpm</string>
+    <string name="format_bpm_string">%s bpm</string>
+
+    <!-- EmptyState -->
+    <string name="empty_title">No runs found</string>
+    <string name="empty_description">Currere reads your running data from Health Connect. Record runs with your preferred fitness app (Garmin, Samsung Health, Google Fit, etc.) and they will appear here.</string>
+
+    <!-- PermissionScreen -->
+    <string name="permission_title">Health Connect permissions required</string>
+    <string name="permission_description">Currere needs read access to your exercise sessions, distance, steps, heart rate, and speed data to display your running activity.</string>
+    <string name="open_health_connect_settings">Open Health Connect settings</string>
+    <string name="try_again">Try again</string>
+
+    <!-- QrScannerScreen -->
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="point_camera_at_qr">Point camera at QR code</string>
+    <string name="camera_permission_required">Camera permission is required to scan QR codes</string>
+
+    <!-- Connection errors -->
+    <string name="error_auth_failed">Authentication failed. Check your token.</string>
+    <string name="error_server_returned">Server returned %d</string>
+    <string name="error_connection_failed">Connection failed</string>
+    <string name="error_url_token_required">Server URL and token are required</string>
+
+    <!-- ManualSetupScreen -->
+    <string name="connect_to_server">Connect to Server</string>
+    <string name="server_url">Server URL</string>
+    <string name="api_token">API Token</string>
+    <string name="connect">Connect</string>
+
+    <!-- SettingsScreen -->
+    <string name="server_connection">Server Connection</string>
+    <string name="connected_to">Connected to:</string>
+    <string name="format_last_sync">Last sync: %s</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="disconnect_message">This will remove your server connection and clear all sync data.</string>
+    <string name="not_connected">Not connected to any server. Connect to sync your runs.</string>
+    <string name="enter_manually">Enter Manually</string>
+
+    <!-- DetailScreen -->
+    <string name="run_detail">Run Detail</string>
+    <string name="splits">Splits</string>
+
+    <!-- StatsRow (detail) -->
+    <string name="distance">Distance</string>
+    <string name="time">Time</string>
+    <string name="pace">Pace</string>
+    <string name="avg_hr">Avg HR</string>
+    <string name="steps">Steps</string>
+
+    <!-- SplitsTable -->
+    <string name="splits_km">Km</string>
+    <string name="splits_pace">Pace</string>
+    <string name="splits_time">Time</string>
+
+    <!-- PaceChart -->
+    <string name="pace_chart_description">Pace chart: average %s per km</string>
+
+    <!-- HeartRateChart -->
+    <string name="heart_rate">Heart Rate</string>
+    <string name="heart_rate_chart_description">Heart rate chart: average %d bpm</string>
+
+    <!-- DiaryScreen -->
+    <string name="recent_runs">Recent Runs</string>
+    <string name="format_total_count">%d total</string>
+    <string name="format_view_all_runs">View all %d runs</string>
+
+    <!-- TimeOfDay -->
+    <string name="morning_run">Morning run</string>
+    <string name="afternoon_run">Afternoon run</string>
+    <string name="evening_run">Evening run</string>
+    <string name="night_run">Night run</string>
+
+    <!-- RunHistoryScreen -->
+    <string name="run_history">Run History</string>
+
+    <!-- RunCard -->
+    <string name="duration">Duration</string>
+    <string name="avg_bpm">Avg BPM</string>
+    <string name="synced">Synced</string>
+    <string name="pending_sync">Pending sync</string>
+    <string name="sync_failed">Sync failed</string>
+
+    <!-- PaceBarChart -->
+    <string name="recent_pace">Recent Pace</string>
+    <string name="today">Today</string>
+    <string name="pace_improving">Pace improving</string>
+    <string name="pace_declining">Pace declining</string>
+    <string name="pace_stable">Pace stable</string>
+
+    <!-- StatisticsRow -->
+    <string name="total_distance">Total distance</string>
+    <string name="format_longest_km">Longest %s km</string>
+    <string name="average_pace">Average pace</string>
+    <string name="format_fastest_per_km">Fastest %s /km</string>
+    <string name="average_heart_rate">Average heart rate</string>
+    <string name="format_highest_bpm">Highest %s bpm</string>
+    <string name="unit_runs">runs</string>
+    <string name="total_activity">Total activity</string>
+    <string name="format_time_total">%s total</string>
 </resources>

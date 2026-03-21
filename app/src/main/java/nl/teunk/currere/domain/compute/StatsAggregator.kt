@@ -76,11 +76,4 @@ object StatsAggregator {
             else -> TimeOfDay.NIGHT
         }
     }
-
-    /**
-     * Derive activity title from start time.
-     */
-    fun activityTitle(startTime: Instant, zoneId: ZoneId = ZoneId.systemDefault()): String {
-        return timeOfDay(startTime, zoneId).label
-    }
 }

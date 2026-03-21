@@ -2,7 +2,9 @@ package nl.teunk.currere.data.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.TimeOfDay
 import java.time.Duration
 import java.time.Instant
 
@@ -26,7 +28,11 @@ data class RunSessionEntity(
         activeDuration = Duration.ofSeconds(activeDurationSeconds),
         averagePaceSecondsPerKm = averagePaceSecondsPerKm,
         averageHeartRateBpm = averageHeartRateBpm,
-        title = title,
+        timeOfDay = try {
+            TimeOfDay.valueOf(title)
+        } catch (_: IllegalArgumentException) {
+            StatsAggregator.timeOfDay(Instant.ofEpochMilli(startTimeEpochMillis))
+        },
     )
 
     companion object {
@@ -38,7 +44,7 @@ data class RunSessionEntity(
             activeDurationSeconds = session.activeDuration.seconds,
             averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
             averageHeartRateBpm = session.averageHeartRateBpm,
-            title = session.title,
+            title = session.timeOfDay.name,
         )
     }
 }

@@ -31,7 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -63,10 +65,10 @@ fun QrScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scan QR Code") },
+                title = { Text(stringResource(R.string.scan_qr_code)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -107,13 +109,13 @@ fun QrScannerScreen(
                         .padding(horizontal = 24.dp, vertical = 12.dp),
                 ) {
                     Text(
-                        text = "Point camera at QR code",
+                        text = stringResource(R.string.point_camera_at_qr),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             } else if (!hasCameraPermission) {
                 Text(
-                    text = "Camera permission is required to scan QR codes",
+                    text = stringResource(R.string.camera_permission_required),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

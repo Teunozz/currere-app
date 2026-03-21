@@ -31,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.data.sync.SyncRecord
 import nl.teunk.currere.data.sync.SyncState
 import nl.teunk.currere.domain.compute.StatsAggregator
@@ -49,8 +51,9 @@ fun RunCard(
     modifier: Modifier = Modifier,
     syncRecord: SyncRecord? = null,
 ) {
+    val title = stringResource(session.timeOfDay.labelResId)
     val formattedDate = DateFormatters.dateTimeCompact.format(session.startTime)
-    val distanceText = "${StatsAggregator.formatDistanceKm(session.distanceMeters)} km"
+    val distanceText = stringResource(R.string.format_km, StatsAggregator.formatDistanceKm(session.distanceMeters))
     val durationText = StatsAggregator.formatDuration(session.activeDuration)
     val paceText = session.averagePaceSecondsPerKm?.let {
         StatsAggregator.formatPace(it)
@@ -62,7 +65,7 @@ fun RunCard(
             .clickable(onClick = onClick)
             .semantics {
                 contentDescription =
-                    "${session.title}, $formattedDate, $distanceText, $durationText, pace $paceText"
+                    "$title, $formattedDate, $distanceText, $durationText, pace $paceText"
             },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -84,7 +87,7 @@ fun RunCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
-                        text = session.title,
+                        text = stringResource(session.timeOfDay.labelResId),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     if (syncRecord != null) {
@@ -119,22 +122,22 @@ fun RunCard(
                 StatItem(
                     icon = Icons.Filled.Straighten,
                     value = distanceText,
-                    label = "Distance",
+                    label = stringResource(R.string.distance),
                 )
                 StatItem(
                     icon = Icons.Filled.Timer,
                     value = durationText,
-                    label = "Duration",
+                    label = stringResource(R.string.duration),
                 )
                 StatItem(
                     icon = Icons.Filled.Speed,
                     value = paceText,
-                    label = "Pace",
+                    label = stringResource(R.string.pace),
                 )
                 StatItem(
                     icon = Icons.Filled.FavoriteBorder,
                     value = session.averageHeartRateBpm?.toString() ?: "—",
-                    label = "Avg BPM",
+                    label = stringResource(R.string.avg_bpm),
                 )
             }
         }
@@ -173,17 +176,17 @@ private fun SyncIndicator(state: SyncState) {
         SyncState.SYNCED -> Triple(
             Icons.Filled.CloudDone,
             MaterialTheme.colorScheme.primary,
-            "Synced",
+            stringResource(R.string.synced),
         )
         SyncState.PENDING -> Triple(
             Icons.Filled.CloudUpload,
             MaterialTheme.colorScheme.onSurfaceVariant,
-            "Pending sync",
+            stringResource(R.string.pending_sync),
         )
         SyncState.FAILED -> Triple(
             Icons.Filled.CloudOff,
             MaterialTheme.colorScheme.error,
-            "Sync failed",
+            stringResource(R.string.sync_failed),
         )
     }
     Icon(

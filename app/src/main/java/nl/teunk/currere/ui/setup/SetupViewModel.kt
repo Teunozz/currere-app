@@ -7,7 +7,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import nl.teunk.currere.R
 import nl.teunk.currere.data.api.ApiClient
+import nl.teunk.currere.data.api.AuthenticationException
+import nl.teunk.currere.data.api.ConnectionException
+import nl.teunk.currere.data.api.ServerErrorException
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.sync.SyncWorker
 
@@ -29,7 +33,7 @@ class SetupViewModel(
 
     fun connectWithCredentials(baseUrl: String, token: String) {
         if (baseUrl.isBlank() || token.isBlank()) {
-            _state.value = SetupState.Error("Server URL and token are required")
+            _state.value = SetupState.Error(appContext.getString(R.string.error_url_token_required))
             return
         }
 
@@ -44,7 +48,13 @@ class SetupViewModel(
                     _state.value = SetupState.Success
                 },
                 onFailure = { error ->
-                    _state.value = SetupState.Error(error.message ?: "Connection failed")
+                    val message = when (error) {
+                        is AuthenticationException -> appContext.getString(R.string.error_auth_failed)
+                        is ServerErrorException -> appContext.getString(R.string.error_server_returned, error.code)
+                        is ConnectionException -> appContext.getString(R.string.error_connection_failed)
+                        else -> appContext.getString(R.string.error_connection_failed)
+                    }
+                    _state.value = SetupState.Error(message)
                 },
             )
         }

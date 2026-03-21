@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import nl.teunk.currere.data.RunSessionRepository
+import nl.teunk.currere.domain.model.TimeOfDay
 import nl.teunk.currere.data.api.ApiClient
 import nl.teunk.currere.data.api.ApiResponse
 import nl.teunk.currere.data.api.BatchRunRequest
@@ -54,7 +55,7 @@ class SyncRepositoryTest {
         activeDuration = Duration.ofSeconds(1800),
         averagePaceSecondsPerKm = 360.0,
         averageHeartRateBpm = 150,
-        title = "Morning run",
+        timeOfDay = TimeOfDay.MORNING,
     )
 
     private fun makeDetail(session: RunSession) = RunDetail(

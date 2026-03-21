@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import nl.teunk.currere.domain.compute.StatsAggregator
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.model.PaceSplit
 import nl.teunk.currere.ui.preview.SampleSplits
 import nl.teunk.currere.ui.theme.CurrereTheme
@@ -57,18 +59,18 @@ fun SplitsTable(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Km",
+                    text = stringResource(R.string.splits_km),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.width(40.dp),
                 )
                 Text(
-                    text = "Pace",
+                    text = stringResource(R.string.splits_pace),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.width(56.dp),
                 )
                 Box(Modifier.weight(1f))
                 Text(
-                    text = "Time",
+                    text = stringResource(R.string.splits_time),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.width(64.dp),
                 )

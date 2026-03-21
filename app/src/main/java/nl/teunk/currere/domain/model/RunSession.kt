@@ -11,5 +11,5 @@ data class RunSession(
     val activeDuration: Duration,
     val averagePaceSecondsPerKm: Double?,
     val averageHeartRateBpm: Long?,
-    val title: String,
+    val timeOfDay: TimeOfDay,
 )

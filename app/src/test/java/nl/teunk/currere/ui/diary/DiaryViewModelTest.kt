@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import nl.teunk.currere.data.RunSessionRepository
+import nl.teunk.currere.domain.model.TimeOfDay
 import nl.teunk.currere.data.sync.SyncRecord
 import nl.teunk.currere.data.sync.SyncState
 import nl.teunk.currere.data.sync.SyncStatusStore
@@ -65,7 +66,7 @@ class DiaryViewModelTest {
         activeDuration = Duration.ofSeconds(1800),
         averagePaceSecondsPerKm = 360.0,
         averageHeartRateBpm = 150,
-        title = "Morning run",
+        timeOfDay = TimeOfDay.MORNING,
     )
 
     @Test

@@ -7,6 +7,7 @@ import nl.teunk.currere.domain.model.PaceSample
 import nl.teunk.currere.domain.model.PaceSplit
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.TimeOfDay
 import nl.teunk.currere.ui.diary.DiaryRunItem
 import java.time.Duration
 import java.time.Instant
@@ -23,7 +24,7 @@ val SampleRunSession = RunSession(
     activeDuration = Duration.ofMinutes(42).plusSeconds(15),
     averagePaceSecondsPerKm = 308.0,
     averageHeartRateBpm = 156,
-    title = "Morning Run",
+    timeOfDay = TimeOfDay.MORNING,
 )
 
 val SampleRunSessions = listOf(
@@ -40,7 +41,7 @@ val SampleRunSessions = listOf(
             activeDuration = Duration.ofMinutes(28).plusSeconds(33),
             averagePaceSecondsPerKm = 335.0,
             averageHeartRateBpm = 148,
-            title = "Easy Run",
+            timeOfDay = TimeOfDay.AFTERNOON,
         ),
         syncRecord = SyncRecord(state = SyncState.PENDING),
     ),
@@ -53,7 +54,7 @@ val SampleRunSessions = listOf(
             activeDuration = Duration.ofMinutes(55).plusSeconds(12),
             averagePaceSecondsPerKm = 330.0,
             averageHeartRateBpm = 162,
-            title = "Long Run",
+            timeOfDay = TimeOfDay.EVENING,
         ),
     ),
 )
@@ -90,9 +91,9 @@ val SampleRunDetail = RunDetail(
 )
 
 val SamplePaceRunSessions = listOf(
-    RunSession("1", sampleStart, sampleEnd, 0.0, Duration.ZERO, 302.0, 0, ""),
-    RunSession("2", sampleStart, sampleEnd, 0.0, Duration.ZERO, 330.0, 0, ""),
-    RunSession("3", sampleStart, sampleEnd, 0.0, Duration.ZERO, 288.0, 0, ""),
-    RunSession("4", sampleStart, sampleEnd, 0.0, Duration.ZERO, 327.0, 0, ""),
-    RunSession("5", sampleStart, sampleEnd, 0.0, Duration.ZERO, 315.0, 0, ""),
+    RunSession("1", sampleStart, sampleEnd, 0.0, Duration.ZERO, 302.0, 0, TimeOfDay.MORNING),
+    RunSession("2", sampleStart, sampleEnd, 0.0, Duration.ZERO, 330.0, 0, TimeOfDay.AFTERNOON),
+    RunSession("3", sampleStart, sampleEnd, 0.0, Duration.ZERO, 288.0, 0, TimeOfDay.MORNING),
+    RunSession("4", sampleStart, sampleEnd, 0.0, Duration.ZERO, 327.0, 0, TimeOfDay.EVENING),
+    RunSession("5", sampleStart, sampleEnd, 0.0, Duration.ZERO, 315.0, 0, TimeOfDay.MORNING),
 )

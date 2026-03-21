@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.ui.preview.SampleRunDetail
@@ -46,21 +48,21 @@ fun StatsRow(
         ) {
             StatCard(
                 icon = Icons.Filled.Straighten,
-                label = "Distance",
-                value = "${StatsAggregator.formatDistanceKm(session.distanceMeters)} km",
+                label = stringResource(R.string.distance),
+                value = stringResource(R.string.format_km, StatsAggregator.formatDistanceKm(session.distanceMeters)),
                 modifier = Modifier.weight(1f),
             )
             StatCard(
                 icon = Icons.Filled.Timer,
-                label = "Time",
+                label = stringResource(R.string.time),
                 value = StatsAggregator.formatDuration(session.activeDuration),
                 modifier = Modifier.weight(1f),
             )
             StatCard(
                 icon = Icons.Filled.Speed,
-                label = "Pace",
+                label = stringResource(R.string.pace),
                 value = session.averagePaceSecondsPerKm?.let {
-                    "${StatsAggregator.formatPace(it)}/km"
+                    stringResource(R.string.format_pace_per_km, StatsAggregator.formatPace(it))
                 } ?: "—",
                 modifier = Modifier.weight(1f),
             )
@@ -73,13 +75,13 @@ fun StatsRow(
         ) {
             StatCard(
                 icon = Icons.Filled.FavoriteBorder,
-                label = "Avg HR",
-                value = session.averageHeartRateBpm?.let { "$it bpm" } ?: "—",
+                label = stringResource(R.string.avg_hr),
+                value = session.averageHeartRateBpm?.let { stringResource(R.string.format_bpm_int, it) } ?: "—",
                 modifier = Modifier.weight(1f),
             )
             StatCard(
                 icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
-                label = "Steps",
+                label = stringResource(R.string.steps),
                 value = "%,d".format(detail.totalSteps),
                 modifier = Modifier.weight(1f),
             )

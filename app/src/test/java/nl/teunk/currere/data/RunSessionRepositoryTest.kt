@@ -13,6 +13,7 @@ import nl.teunk.currere.data.db.RunDetailDao
 import nl.teunk.currere.data.db.RunSessionDao
 import nl.teunk.currere.data.db.RunSessionEntity
 import nl.teunk.currere.data.health.HealthConnectSource
+import nl.teunk.currere.domain.model.TimeOfDay
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.PaceSample
 import nl.teunk.currere.domain.model.PaceSplit
@@ -40,7 +41,7 @@ class RunSessionRepositoryTest {
             activeDurationSeconds = 1800L,
             averagePaceSecondsPerKm = 360.0,
             averageHeartRateBpm = 150L,
-            title = "Morning run",
+            title = "MORNING",
         )
 
     private fun makeDomain(id: String, startMillis: Long = 1704067200000L, endMillis: Long = 1704069000000L) =
@@ -52,7 +53,7 @@ class RunSessionRepositoryTest {
             activeDuration = Duration.ofSeconds(1800L),
             averagePaceSecondsPerKm = 360.0,
             averageHeartRateBpm = 150L,
-            title = "Morning run",
+            timeOfDay = TimeOfDay.MORNING,
         )
 
     private fun makeDetail(session: RunSession) = RunDetail(

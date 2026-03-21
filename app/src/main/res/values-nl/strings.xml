@@ -1,0 +1,110 @@
+<resources>
+    <!-- Common -->
+    <string name="back">Terug</string>
+    <string name="settings">Instellingen</string>
+    <string name="cancel">Annuleren</string>
+    <string name="label_avg">(gem.)</string>
+
+    <!-- Format strings -->
+    <string name="format_pace_per_km">%s /km</string>
+    <string name="format_bpm_int">%d bpm</string>
+    <string name="format_bpm_string">%s bpm</string>
+
+    <!-- EmptyState -->
+    <string name="empty_title">Geen hardloopsessies gevonden</string>
+    <string name="empty_description">Currere leest je hardloopgegevens uit Health Connect. Registreer hardloopsessies met je favoriete fitness-app (Garmin, Samsung Health, Google Fit, etc.) en ze verschijnen hier.</string>
+
+    <!-- PermissionScreen -->
+    <string name="permission_title">Health Connect-machtigingen vereist</string>
+    <string name="permission_description">Currere heeft leestoegang nodig tot je trainingssessies, afstand, stappen, hartslag en snelheidsgegevens om je hardloopactiviteit weer te geven.</string>
+    <string name="open_health_connect_settings">Health Connect-instellingen openen</string>
+    <string name="try_again">Opnieuw proberen</string>
+
+    <!-- QrScannerScreen -->
+    <string name="scan_qr_code">QR-code scannen</string>
+    <string name="point_camera_at_qr">Richt de camera op de QR-code</string>
+    <string name="camera_permission_required">Cameramachtiging is vereist om QR-codes te scannen</string>
+
+    <!-- Connection errors -->
+    <string name="error_auth_failed">Authenticatie mislukt. Controleer je token.</string>
+    <string name="error_server_returned">Server gaf %d terug</string>
+    <string name="error_connection_failed">Verbinding mislukt</string>
+    <string name="error_url_token_required">Server-URL en token zijn vereist</string>
+
+    <!-- ManualSetupScreen -->
+    <string name="connect_to_server">Verbinden met server</string>
+    <string name="server_url">Server-URL</string>
+    <string name="api_token">API-token</string>
+    <string name="connect">Verbinden</string>
+
+    <!-- SettingsScreen -->
+    <string name="server_connection">Serververbinding</string>
+    <string name="connected_to">Verbonden met:</string>
+    <string name="format_last_sync">Laatste synchronisatie: %s</string>
+    <string name="disconnect">Ontkoppelen</string>
+    <string name="disconnect_message">Dit verwijdert de serververbinding en wist alle synchronisatiegegevens.</string>
+    <string name="not_connected">Niet verbonden met een server. Maak verbinding om je hardloopsessies te synchroniseren.</string>
+    <string name="enter_manually">Handmatig invoeren</string>
+
+    <!-- DetailScreen -->
+    <string name="run_detail">Sessiedetails</string>
+    <string name="splits">Splits</string>
+
+    <!-- StatsRow (detail) -->
+    <string name="distance">Afstand</string>
+    <string name="time">Tijd</string>
+    <string name="pace">Tempo</string>
+    <string name="avg_hr">Gem. hartslag</string>
+    <string name="steps">Stappen</string>
+
+    <!-- SplitsTable -->
+    <string name="splits_km">Km</string>
+    <string name="splits_pace">Tempo</string>
+    <string name="splits_time">Tijd</string>
+
+    <!-- PaceChart -->
+    <string name="pace_chart_description">Tempografiek: gemiddeld %s per km</string>
+
+    <!-- HeartRateChart -->
+    <string name="heart_rate">Hartslag</string>
+    <string name="heart_rate_chart_description">Hartslaggrafiek: gemiddeld %d bpm</string>
+
+    <!-- DiaryScreen -->
+    <string name="recent_runs">Recente sessies</string>
+    <string name="format_total_count">%d totaal</string>
+    <string name="format_view_all_runs">Bekijk alle %d sessies</string>
+
+    <!-- TimeOfDay -->
+    <string name="morning_run">Ochtendloop</string>
+    <string name="afternoon_run">Middagloop</string>
+    <string name="evening_run">Avondloop</string>
+    <string name="night_run">Nachtloop</string>
+
+    <!-- RunHistoryScreen -->
+    <string name="run_history">Hardloopgeschiedenis</string>
+
+    <!-- RunCard -->
+    <string name="duration">Duur</string>
+    <string name="avg_bpm">Gem. BPM</string>
+    <string name="synced">Gesynchroniseerd</string>
+    <string name="pending_sync">Synchronisatie wachtend</string>
+    <string name="sync_failed">Synchronisatie mislukt</string>
+
+    <!-- PaceBarChart -->
+    <string name="recent_pace">Recent tempo</string>
+    <string name="today">Vandaag</string>
+    <string name="pace_improving">Tempo verbetert</string>
+    <string name="pace_declining">Tempo daalt</string>
+    <string name="pace_stable">Tempo stabiel</string>
+
+    <!-- StatisticsRow -->
+    <string name="total_distance">Totale afstand</string>
+    <string name="format_longest_km">Langste %s km</string>
+    <string name="average_pace">Gemiddeld tempo</string>
+    <string name="format_fastest_per_km">Snelste %s /km</string>
+    <string name="average_heart_rate">Gemiddelde hartslag</string>
+    <string name="format_highest_bpm">Hoogste %s bpm</string>
+    <string name="unit_runs">sessies</string>
+    <string name="total_activity">Totale activiteit</string>
+    <string name="format_time_total">%s totaal</string>
+</resources>

@@ -7,6 +7,7 @@ import nl.teunk.currere.data.RunSessionRepository
 import nl.teunk.currere.domain.model.HeartRateSample
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.domain.model.RunSession
+import nl.teunk.currere.domain.model.TimeOfDay
 import nl.teunk.currere.util.MainDispatcherRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -36,7 +37,7 @@ class DetailViewModelTest {
             activeDuration = Duration.ofSeconds(1800),
             averagePaceSecondsPerKm = 360.0,
             averageHeartRateBpm = 150,
-            title = "Morning run",
+            timeOfDay = TimeOfDay.MORNING,
         ),
         totalSteps = 5000,
         heartRateSamples = listOf(

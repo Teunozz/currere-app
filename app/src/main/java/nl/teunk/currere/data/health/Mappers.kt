@@ -34,7 +34,7 @@ object Mappers {
             activeDuration = activeDuration,
             averagePaceSecondsPerKm = avgPace,
             averageHeartRateBpm = avgHr,
-            title = StatsAggregator.activityTitle(session.startTime),
+            timeOfDay = StatsAggregator.timeOfDay(session.startTime),
         )
     }
 

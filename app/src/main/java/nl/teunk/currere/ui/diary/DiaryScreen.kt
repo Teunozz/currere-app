@@ -41,10 +41,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.compute.StatsAggregator
 import nl.teunk.currere.domain.model.RunSession
 import nl.teunk.currere.domain.model.RunningStats
@@ -98,10 +100,10 @@ fun DiaryScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Currere") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -188,14 +190,14 @@ private fun RecentRunsCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Recent Runs",
+                    text = stringResource(R.string.recent_runs),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (totalCount > items.size) {
                     Text(
-                        text = "$totalCount total",
+                        text = stringResource(R.string.format_total_count, totalCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -245,7 +247,7 @@ private fun RecentRunsCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "View all $totalCount runs",
+                        text = stringResource(R.string.format_view_all_runs, totalCount),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = accent,
@@ -273,9 +275,9 @@ private fun LatestRunRow(
     val distanceNum = StatsAggregator.formatDistanceKm(session.distanceMeters)
     val duration = StatsAggregator.formatDuration(session.activeDuration)
     val pace = session.averagePaceSecondsPerKm?.let {
-        "${StatsAggregator.formatPace(it)} /km"
+        stringResource(R.string.format_pace_per_km, StatsAggregator.formatPace(it))
     }
-    val hr = session.averageHeartRateBpm?.let { "$it bpm" }
+    val hr = session.averageHeartRateBpm?.let { stringResource(R.string.format_bpm_int, it) }
     val date = DateFormatters.dateShort.format(session.startTime)
 
     Column(
@@ -290,7 +292,7 @@ private fun LatestRunRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = session.title,
+                text = stringResource(session.timeOfDay.labelResId),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -316,7 +318,7 @@ private fun LatestRunRow(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = "km",
+                text = stringResource(R.string.unit_km),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -341,10 +343,10 @@ private fun OlderRunRow(
     accent: Color,
     onClick: () -> Unit,
 ) {
-    val distance = "${StatsAggregator.formatDistanceKm(session.distanceMeters)} km"
+    val distance = stringResource(R.string.format_km, StatsAggregator.formatDistanceKm(session.distanceMeters))
     val duration = StatsAggregator.formatDuration(session.activeDuration)
     val pace = session.averagePaceSecondsPerKm?.let {
-        "${StatsAggregator.formatPace(it)} /km"
+        stringResource(R.string.format_pace_per_km, StatsAggregator.formatPace(it))
     }
     val date = DateFormatters.dateShort.format(session.startTime)
 
@@ -362,7 +364,7 @@ private fun OlderRunRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = session.title,
+                    text = stringResource(session.timeOfDay.labelResId),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,

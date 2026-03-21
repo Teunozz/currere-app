@@ -8,7 +8,10 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import nl.teunk.currere.R
 import nl.teunk.currere.data.api.ApiClient
+import nl.teunk.currere.data.api.AuthenticationException
+import nl.teunk.currere.data.api.ConnectionException
 import nl.teunk.currere.data.credentials.CredentialsManager
 import nl.teunk.currere.data.sync.SyncWorker
 import nl.teunk.currere.util.MainDispatcherRule
@@ -34,6 +37,9 @@ class SetupViewModelTest {
         mockkObject(SyncWorker.Companion)
         every { SyncWorker.enqueueOneTime(any()) } returns Unit
         every { SyncWorker.schedulePeriodicSync(any()) } returns Unit
+        every { appContext.getString(R.string.error_url_token_required) } returns "Server URL and token are required"
+        every { appContext.getString(R.string.error_auth_failed) } returns "Authentication failed. Check your token."
+        every { appContext.getString(R.string.error_connection_failed) } returns "Connection failed"
     }
 
     @After
@@ -85,21 +91,33 @@ class SetupViewModelTest {
     }
 
     @Test
-    fun `connectWithCredentials failure sets Error state`() {
+    fun `connectWithCredentials auth failure sets Error state`() {
         coEvery { apiClient.testConnection(any(), any()) } returns
-            Result.failure(Exception("Authentication failed"))
+            Result.failure(AuthenticationException())
 
         val viewModel = createViewModel()
         viewModel.connectWithCredentials("https://example.com", "bad-token")
 
         assertTrue(viewModel.state.value is SetupState.Error)
-        assertEquals("Authentication failed", (viewModel.state.value as SetupState.Error).message)
+        assertEquals("Authentication failed. Check your token.", (viewModel.state.value as SetupState.Error).message)
+    }
+
+    @Test
+    fun `connectWithCredentials connection failure sets Error state`() {
+        coEvery { apiClient.testConnection(any(), any()) } returns
+            Result.failure(ConnectionException())
+
+        val viewModel = createViewModel()
+        viewModel.connectWithCredentials("https://example.com", "token")
+
+        assertTrue(viewModel.state.value is SetupState.Error)
+        assertEquals("Connection failed", (viewModel.state.value as SetupState.Error).message)
     }
 
     @Test
     fun `resetState returns to Idle`() {
         coEvery { apiClient.testConnection(any(), any()) } returns
-            Result.failure(Exception("fail"))
+            Result.failure(ConnectionException())
 
         val viewModel = createViewModel()
         viewModel.connectWithCredentials("https://example.com", "token")

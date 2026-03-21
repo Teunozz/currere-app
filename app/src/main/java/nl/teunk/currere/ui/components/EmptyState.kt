@@ -15,8 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.ui.theme.CurrereTheme
 
 @Composable
@@ -40,7 +42,7 @@ fun EmptyState(
         Spacer(Modifier.height(24.dp))
 
         Text(
-            text = "No runs found",
+            text = stringResource(R.string.empty_title),
             style = MaterialTheme.typography.headlineSmall,
             textAlign = TextAlign.Center,
         )
@@ -48,7 +50,7 @@ fun EmptyState(
         Spacer(Modifier.height(12.dp))
 
         Text(
-            text = "Currere reads your running data from Health Connect. Record runs with your preferred fitness app (Garmin, Samsung Health, Google Fit, etc.) and they will appear here.",
+            text = stringResource(R.string.empty_description),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

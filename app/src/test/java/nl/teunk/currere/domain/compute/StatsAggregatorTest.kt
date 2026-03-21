@@ -109,10 +109,4 @@ class StatsAggregatorTest {
     fun `formatPace sub-minute pace`() {
         assertEquals("0:45", StatsAggregator.formatPace(45.0))
     }
-
-    @Test
-    fun `activityTitle delegates to timeOfDay`() {
-        val morning = Instant.parse("2025-06-21T07:30:00Z")
-        assertEquals("Morning run", StatsAggregator.activityTitle(morning, utc))
-    }
 }

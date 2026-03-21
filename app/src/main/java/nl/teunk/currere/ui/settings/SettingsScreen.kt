@@ -29,8 +29,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.ui.theme.CurrereTheme
 
 @Composable
@@ -67,19 +69,19 @@ fun SettingsScreenContent(
     if (showDisconnectDialog) {
         AlertDialog(
             onDismissRequest = { showDisconnectDialog = false },
-            title = { Text("Disconnect") },
-            text = { Text("This will remove your server connection and clear all sync data.") },
+            title = { Text(stringResource(R.string.disconnect)) },
+            text = { Text(stringResource(R.string.disconnect_message)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDisconnect()
                     showDisconnectDialog = false
                 }) {
-                    Text("Disconnect", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.disconnect), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDisconnectDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -88,10 +90,10 @@ fun SettingsScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -109,13 +111,13 @@ fun SettingsScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "Server Connection",
+                text = stringResource(R.string.server_connection),
                 style = MaterialTheme.typography.titleMedium,
             )
 
             if (uiState.isConnected) {
                 Text(
-                    text = "Connected to:",
+                    text = stringResource(R.string.connected_to),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -127,7 +129,7 @@ fun SettingsScreenContent(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Last sync: ${uiState.lastSyncTime}",
+                    text = stringResource(R.string.format_last_sync, uiState.lastSyncTime ?: ""),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -141,11 +143,11 @@ fun SettingsScreenContent(
                         contentColor = MaterialTheme.colorScheme.error,
                     ),
                 ) {
-                    Text("Disconnect")
+                    Text(stringResource(R.string.disconnect))
                 }
             } else {
                 Text(
-                    text = "Not connected to any server. Connect to sync your runs.",
+                    text = stringResource(R.string.not_connected),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -156,14 +158,14 @@ fun SettingsScreenContent(
                     onClick = onScanQrCode,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Scan QR Code")
+                    Text(stringResource(R.string.scan_qr_code))
                 }
 
                 OutlinedButton(
                     onClick = onManualSetup,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Enter Manually")
+                    Text(stringResource(R.string.enter_manually))
                 }
             }
         }

@@ -10,6 +10,10 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
+class AuthenticationException : Exception()
+class ServerErrorException(val code: Int) : Exception()
+class ConnectionException(override val cause: Exception? = null) : Exception()
+
 class ApiClient(
     private val credentialsManager: CredentialsManager,
 ) {
@@ -58,11 +62,11 @@ class ApiClient(
 
             when {
                 response.isSuccessful -> Result.success(Unit)
-                response.code() == 401 -> Result.failure(Exception("Authentication failed. Check your token."))
-                else -> Result.failure(Exception("Server returned ${response.code()}"))
+                response.code() == 401 -> Result.failure(AuthenticationException())
+                else -> Result.failure(ServerErrorException(response.code()))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Connection failed: ${e.message}"))
+            Result.failure(ConnectionException(e))
         }
     }
 

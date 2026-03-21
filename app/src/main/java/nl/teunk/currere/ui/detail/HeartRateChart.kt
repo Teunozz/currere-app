@@ -19,10 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModel
@@ -64,6 +66,7 @@ fun HeartRateChart(
     if (samples.isEmpty()) return
 
     val avgHr = samples.map { it.bpm }.average().toLong()
+    val chartDescription = stringResource(R.string.heart_rate_chart_description, avgHr)
 
     val downsampled = remember(samples, sessionStartTime) {
         downsampleHeartRate(samples, sessionStartTime)
@@ -110,18 +113,18 @@ fun HeartRateChart(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Heart Rate",
+                    text = stringResource(R.string.heart_rate),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "$avgHr bpm",
+                    text = stringResource(R.string.format_bpm_int, avgHr),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "(avg)",
+                    text = stringResource(R.string.label_avg),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -170,7 +173,7 @@ fun HeartRateChart(
                 .fillMaxWidth()
                 .height(200.dp)
                 .semantics {
-                    contentDescription = "Heart rate chart: average $avgHr bpm"
+                    contentDescription = chartDescription
                 },
         )
     }

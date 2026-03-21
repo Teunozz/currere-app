@@ -16,10 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.model.RunningStats
 import nl.teunk.currere.ui.theme.ChartHeartRate
 import nl.teunk.currere.ui.theme.ChartPace
@@ -29,7 +31,21 @@ import nl.teunk.currere.ui.theme.SplitFast
 
 @Composable
 fun StatisticsSection(stats: RunningStats, modifier: Modifier = Modifier) {
-    val cells = buildStatCells(stats)
+    val cells = buildStatCells(
+        stats = stats,
+        totalDistanceLabel = stringResource(R.string.total_distance),
+        longestDetail = stringResource(R.string.format_longest_km, stats.longestDistanceKm),
+        averagePaceLabel = stringResource(R.string.average_pace),
+        fastestDetail = stringResource(R.string.format_fastest_per_km, stats.fastestPace),
+        averageHrLabel = stringResource(R.string.average_heart_rate),
+        highestHrDetail = stringResource(R.string.format_highest_bpm, stats.highestHeartRate),
+        totalActivityLabel = stringResource(R.string.total_activity),
+        totalTimeDetail = stringResource(R.string.format_time_total, stats.totalTime),
+        kmUnit = stringResource(R.string.unit_km),
+        perKmUnit = stringResource(R.string.unit_per_km),
+        bpmUnit = stringResource(R.string.unit_bpm),
+        runsUnit = stringResource(R.string.unit_runs),
+    )
 
     Column(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -60,33 +76,47 @@ private data class StatCellData(
     val accentColor: Color,
 )
 
-private fun buildStatCells(stats: RunningStats): List<StatCellData> = listOf(
+private fun buildStatCells(
+    stats: RunningStats,
+    totalDistanceLabel: String,
+    longestDetail: String,
+    averagePaceLabel: String,
+    fastestDetail: String,
+    averageHrLabel: String,
+    highestHrDetail: String,
+    totalActivityLabel: String,
+    totalTimeDetail: String,
+    kmUnit: String,
+    perKmUnit: String,
+    bpmUnit: String,
+    runsUnit: String,
+): List<StatCellData> = listOf(
     StatCellData(
         heroValue = stats.totalDistanceKm,
-        heroUnit = "km",
-        label = "Total distance",
-        detail = "Longest ${stats.longestDistanceKm} km",
+        heroUnit = kmUnit,
+        label = totalDistanceLabel,
+        detail = longestDetail,
         accentColor = LimeGreen,
     ),
     StatCellData(
         heroValue = stats.avgPace,
-        heroUnit = "/km",
-        label = "Average pace",
-        detail = "Fastest ${stats.fastestPace} /km",
+        heroUnit = perKmUnit,
+        label = averagePaceLabel,
+        detail = fastestDetail,
         accentColor = SplitFast,
     ),
     StatCellData(
         heroValue = stats.avgHeartRate,
-        heroUnit = "bpm",
-        label = "Average heart rate",
-        detail = "Highest ${stats.highestHeartRate} bpm",
+        heroUnit = bpmUnit,
+        label = averageHrLabel,
+        detail = highestHrDetail,
         accentColor = ChartHeartRate,
     ),
     StatCellData(
         heroValue = stats.totalRuns,
-        heroUnit = "runs",
-        label = "Total activity",
-        detail = "${stats.totalTime} total",
+        heroUnit = runsUnit,
+        label = totalActivityLabel,
+        detail = totalTimeDetail,
         accentColor = ChartPace,
     ),
 )

@@ -25,8 +25,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import nl.teunk.currere.R
 import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.ui.DateFormatters
 import nl.teunk.currere.ui.preview.SampleRunDetail
@@ -44,14 +46,14 @@ fun DetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    val title = (uiState as? DetailUiState.Success)?.detail?.session?.title ?: "Run Detail"
+                    val title = (uiState as? DetailUiState.Success)?.detail?.session?.timeOfDay?.labelResId?.let { stringResource(it) } ?: stringResource(R.string.run_detail)
                     Text(title)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
                 },
@@ -150,7 +152,7 @@ fun DetailContent(
         // Splits Table
         if (detail.splits.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
-            SectionHeader("Splits")
+            SectionHeader(stringResource(R.string.splits))
             SplitsTable(splits = detail.splits)
         }
 
