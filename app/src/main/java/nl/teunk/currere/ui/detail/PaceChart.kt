@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
@@ -70,6 +71,7 @@ fun PaceChart(
     samples: List<PaceSample>,
     sessionStartTime: Instant,
     averagePaceSecondsPerKm: Double?,
+    totalDurationSeconds: Long,
     modifier: Modifier = Modifier,
 ) {
     if (samples.isEmpty()) return
@@ -81,12 +83,12 @@ fun PaceChart(
         preparePaceData(samples, sessionStartTime)
     }
 
+    val avgValue = remember(yValues) { yValues.average() }
+
     val model = CartesianChartModel(
         LineCartesianLayerModel.build {
-            series(
-                x = xValues,
-                y = yValues,
-            )
+            series(x = xValues, y = yValues)
+            series(x = listOf(0L, totalDurationSeconds), y = listOf(avgValue, avgValue))
         }
     )
 
@@ -94,11 +96,8 @@ fun PaceChart(
         ChartDefaults.centeredRangeProvider(yValues, padding = 20.0)
     }
 
-    val totalDurationMinutes = remember(xValues) {
-        if (xValues.isEmpty()) 0L else xValues.last() / 60
-    }
-    val labelSpacingMinutes = remember(totalDurationMinutes) {
-        ChartDefaults.labelSpacingMinutes(totalDurationMinutes)
+    val labelSpacingMinutes = remember(totalDurationSeconds) {
+        ChartDefaults.labelSpacingMinutes(totalDurationSeconds / 60)
     }
 
     val lineColor = ChartPace
@@ -169,7 +168,11 @@ fun PaceChart(
                                 ),
                                 splitY = { splitYValue },
                             ),
-                        )
+                        ),
+                        LineCartesianLayer.rememberLine(
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(Color.Transparent)) },
+                            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.dp),
+                        ),
                     ),
                     rangeProvider = rangeProvider,
                 ),
@@ -180,8 +183,10 @@ fun PaceChart(
                     tick = null,
                     line = null,
                     itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
+                    size = ChartDefaults.yAxisSize,
                 ),
                 bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
+                getXStep = { 1.0 },
             ),
             model = model,
             scrollState = rememberVicoScrollState(scrollEnabled = false),
@@ -203,6 +208,7 @@ private fun PaceChartPreview() {
             samples = SamplePaceSamples,
             sessionStartTime = SampleRunSession.startTime,
             averagePaceSecondsPerKm = SampleRunSession.averagePaceSecondsPerKm,
+            totalDurationSeconds = 42 * 60L,
             modifier = Modifier.padding(16.dp),
         )
     }

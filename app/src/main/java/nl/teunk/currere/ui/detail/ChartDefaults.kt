@@ -7,6 +7,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
+import com.patrykandpatrick.vico.compose.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
@@ -15,19 +16,21 @@ import nl.teunk.currere.ui.theme.TextSecondary
 
 internal object ChartDefaults {
 
-    fun formatTimeAxis(totalSeconds: Long): String = when {
-        totalSeconds <= 0L -> "0 s"
-        totalSeconds < 3600L -> "${totalSeconds / 60}m"
-        totalSeconds % 3600L == 0L -> "${totalSeconds / 3600}h"
-        else -> "${totalSeconds / 3600}h${(totalSeconds % 3600) / 60}m"
+    fun formatTimeAxis(totalSeconds: Long): String {
+        val totalMinutes = (totalSeconds + 30) / 60
+        return when {
+            totalMinutes <= 0L -> "0m"
+            totalMinutes < 60L -> "${totalMinutes}m"
+            totalMinutes % 60L == 0L -> "${totalMinutes / 60}h"
+            else -> "${totalMinutes / 60}h${totalMinutes % 60}m"
+        }
     }
 
-    fun labelSpacingMinutes(totalDurationMinutes: Long): Int = when {
-        totalDurationMinutes <= 10 -> 2
-        totalDurationMinutes <= 30 -> 5
-        totalDurationMinutes <= 60 -> 10
-        totalDurationMinutes <= 120 -> 15
-        else -> 30
+    private val niceIntervals = intArrayOf(1, 2, 5, 10, 15, 20, 30, 60)
+
+    fun labelSpacingMinutes(totalDurationMinutes: Long): Int {
+        val minSpacing = (totalDurationMinutes.toInt() / 4 + 1).coerceAtLeast(1)
+        return niceIntervals.firstOrNull { it >= minSpacing } ?: minSpacing
     }
 
     fun centeredRangeProvider(
@@ -40,6 +43,8 @@ internal object ChartDefaults {
         val halfRange = maxOf(avg - min, max - avg) + padding
         return CartesianLayerRangeProvider.fixed(minY = avg - halfRange, maxY = avg + halfRange)
     }
+
+    val yAxisSize: BaseAxis.Size = BaseAxis.Size.Fixed(32.dp)
 
     @Composable
     fun rememberGridLine() = rememberAxisGuidelineComponent(
@@ -65,7 +70,7 @@ internal object ChartDefaults {
         line = null,
         itemPlacer = remember(labelSpacingMinutes) {
             HorizontalAxis.ItemPlacer.aligned(
-                spacing = { labelSpacingMinutes },
+                spacing = { labelSpacingMinutes * 60 },
                 addExtremeLabelPadding = true,
             )
         },

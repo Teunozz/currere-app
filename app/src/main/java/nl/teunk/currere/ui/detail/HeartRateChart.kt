@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -61,6 +62,7 @@ internal fun downsampleHeartRate(
 fun HeartRateChart(
     samples: List<HeartRateSample>,
     sessionStartTime: Instant,
+    totalDurationSeconds: Long,
     modifier: Modifier = Modifier,
 ) {
     if (samples.isEmpty()) return
@@ -72,25 +74,21 @@ fun HeartRateChart(
         downsampleHeartRate(samples, sessionStartTime)
     }
 
-    val model = CartesianChartModel(
-        LineCartesianLayerModel.build {
-            series(
-                x = downsampled.map { it.first },
-                y = downsampled.map { it.second },
-            )
-        }
-    )
-
     val hrValues = remember(downsampled) { downsampled.map { it.second } }
+    val avgValue = remember(hrValues) { hrValues.average() }
     val rangeProvider = remember(hrValues) {
         ChartDefaults.centeredRangeProvider(hrValues, padding = 5.0)
     }
 
-    val totalDurationMinutes = remember(downsampled) {
-        if (downsampled.isEmpty()) 0L else downsampled.last().first / 60
-    }
-    val labelSpacingMinutes = remember(totalDurationMinutes) {
-        ChartDefaults.labelSpacingMinutes(totalDurationMinutes)
+    val model = CartesianChartModel(
+        LineCartesianLayerModel.build {
+            series(x = downsampled.map { it.first }, y = downsampled.map { it.second })
+            series(x = listOf(0L, totalDurationSeconds), y = listOf(avgValue, avgValue))
+        }
+    )
+
+    val labelSpacingMinutes = remember(totalDurationSeconds) {
+        ChartDefaults.labelSpacingMinutes(totalDurationSeconds / 60)
     }
 
     val lineColor = ChartHeartRate
@@ -151,7 +149,11 @@ fun HeartRateChart(
                                     )
                                 ),
                             ),
-                        )
+                        ),
+                        LineCartesianLayer.rememberLine(
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(Color.Transparent)) },
+                            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.dp),
+                        ),
                     ),
                     rangeProvider = rangeProvider,
                 ),
@@ -164,8 +166,10 @@ fun HeartRateChart(
                     tick = null,
                     line = null,
                     itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
+                    size = ChartDefaults.yAxisSize,
                 ),
                 bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
+                getXStep = { 1.0 },
             ),
             model = model,
             scrollState = rememberVicoScrollState(scrollEnabled = false),
@@ -186,6 +190,7 @@ private fun HeartRateChartPreview() {
         HeartRateChart(
             samples = SampleHeartRateSamples,
             sessionStartTime = SampleRunSession.startTime,
+            totalDurationSeconds = 42 * 60L,
             modifier = Modifier.padding(16.dp),
         )
     }

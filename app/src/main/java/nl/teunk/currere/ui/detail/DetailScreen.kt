@@ -33,6 +33,7 @@ import nl.teunk.currere.domain.model.RunDetail
 import nl.teunk.currere.ui.DateFormatters
 import nl.teunk.currere.ui.preview.SampleRunDetail
 import nl.teunk.currere.ui.theme.CurrereTheme
+import java.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,12 +131,18 @@ fun DetailContent(
         // Stats
         StatsRow(detail = detail)
 
+        val totalDurationSeconds = maxOf(
+            detail.heartRateSamples.maxOfOrNull { Duration.between(session.startTime, it.time).seconds } ?: 0L,
+            detail.paceSamples.maxOfOrNull { Duration.between(session.startTime, it.time).seconds } ?: 0L,
+        )
+
         // Heart Rate Chart (hidden when no data)
         if (detail.heartRateSamples.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
             HeartRateChart(
                 samples = detail.heartRateSamples,
                 sessionStartTime = session.startTime,
+                totalDurationSeconds = totalDurationSeconds,
             )
         }
 
@@ -146,6 +153,7 @@ fun DetailContent(
                 samples = detail.paceSamples,
                 sessionStartTime = session.startTime,
                 averagePaceSecondsPerKm = session.averagePaceSecondsPerKm,
+                totalDurationSeconds = totalDurationSeconds,
             )
         }
 
