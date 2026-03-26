@@ -108,22 +108,27 @@ fun HeartRateChart(
     val gridLine = ChartDefaults.rememberGridLine()
     val axisLabel = ChartDefaults.rememberLabel()
 
-    val hrMarkerFormatter = remember(lineColor) {
+    val bpmFormat = stringResource(R.string.format_bpm_int)
+    val hrMarkerFormatter = remember(lineColor, bpmFormat) {
         DefaultCartesianMarker.ValueFormatter { _, targets ->
             val target = targets.firstOrNull() as? LineCartesianLayerMarkerTarget
                 ?: return@ValueFormatter ""
             val point = target.points.firstOrNull() ?: return@ValueFormatter ""
             val bpm = point.entry.y.toLong()
+            val value = String.format(bpmFormat, bpm)
             val time = StatsAggregator.formatDuration(Duration.ofSeconds(point.entry.x.toLong()))
             buildAnnotatedString {
-                withStyle(SpanStyle(color = lineColor, fontWeight = FontWeight.Bold)) {
-                    append("$bpm bpm")
+                withStyle(SpanStyle(color = lineColor, fontWeight = FontWeight.SemiBold)) {
+                    append(value)
                 }
-                append(" at $time")
+                append("  \u00B7  $time")
             }
         }
     }
-    val marker = ChartDefaults.rememberMarker(valueFormatter = hrMarkerFormatter)
+    val marker = ChartDefaults.rememberMarker(
+        valueFormatter = hrMarkerFormatter,
+        guidelineColor = lineColor,
+    )
     val markerVisibilityListener = ChartDefaults.rememberHapticMarkerVisibilityListener()
 
     Column(modifier = modifier.fillMaxWidth()) {

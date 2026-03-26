@@ -98,21 +98,24 @@ internal object ChartDefaults {
     @Composable
     fun rememberMarker(
         valueFormatter: DefaultCartesianMarker.ValueFormatter,
+        guidelineColor: Color = TextSecondary,
     ): DefaultCartesianMarker {
         val labelBackground = rememberShapeComponent(
             fill = Fill(Color.White),
             shape = MarkerCornerBasedShape(
-                base = RoundedCornerShape(12.dp),
+                base = RoundedCornerShape(14.dp),
                 tickSize = 8.dp,
             ),
+            strokeFill = Fill(Color(0x18000000)),
+            strokeThickness = 0.5.dp,
         )
         val label = rememberTextComponent(
-            style = TextStyle(color = Color(0xFF555555), fontSize = 14.sp),
-            padding = Insets(horizontal = 12.dp, vertical = 8.dp),
+            style = TextStyle(color = Color(0xFF666666), fontSize = 14.sp),
+            padding = Insets(horizontal = 14.dp, vertical = 10.dp),
             background = labelBackground,
         )
         val guideline = rememberLineComponent(
-            fill = Fill(TextSecondary.copy(alpha = 0.4f)),
+            fill = Fill(guidelineColor.copy(alpha = 0.25f)),
             thickness = 1.dp,
         )
         return rememberDefaultCartesianMarker(
@@ -121,12 +124,16 @@ internal object ChartDefaults {
             labelPosition = DefaultCartesianMarker.LabelPosition.Top,
             indicator = { color ->
                 LayeredComponent(
-                    back = ShapeComponent(fill = Fill(color.copy(alpha = 0.3f)), shape = CircleShape),
-                    front = ShapeComponent(fill = Fill(color), shape = CircleShape),
-                    padding = Insets(all = 3.dp),
+                    back = ShapeComponent(fill = Fill(color.copy(alpha = 0.15f)), shape = CircleShape),
+                    front = LayeredComponent(
+                        back = ShapeComponent(fill = Fill(color), shape = CircleShape),
+                        front = ShapeComponent(fill = Fill(Color.White), shape = CircleShape),
+                        padding = Insets(all = 2.dp),
+                    ),
+                    padding = Insets(all = 4.dp),
                 )
             },
-            indicatorSize = 14.dp,
+            indicatorSize = 22.dp,
             guideline = guideline,
         )
     }

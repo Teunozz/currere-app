@@ -126,24 +126,27 @@ fun PaceChart(
         }
     }
 
-    val paceMarkerFormatter = remember(lineColor) {
+    val paceUnitFormat = stringResource(R.string.format_pace_per_km)
+    val paceMarkerFormatter = remember(lineColor, paceUnitFormat) {
         DefaultCartesianMarker.ValueFormatter { _, targets ->
             val target = targets.firstOrNull() as? LineCartesianLayerMarkerTarget
                 ?: return@ValueFormatter ""
             val point = target.points.firstOrNull() ?: return@ValueFormatter ""
             val paceSeconds = abs(point.entry.y).toLong()
-            val min = paceSeconds / 60
-            val sec = paceSeconds % 60
+            val value = String.format(paceUnitFormat, StatsAggregator.formatPace(paceSeconds.toDouble()))
             val time = StatsAggregator.formatDuration(Duration.ofSeconds(point.entry.x.toLong()))
             buildAnnotatedString {
-                withStyle(SpanStyle(color = lineColor, fontWeight = FontWeight.Bold)) {
-                    append("$min:${"%02d".format(sec)} /km")
+                withStyle(SpanStyle(color = lineColor, fontWeight = FontWeight.SemiBold)) {
+                    append(value)
                 }
-                append(" at $time")
+                append("  \u00B7  $time")
             }
         }
     }
-    val marker = ChartDefaults.rememberMarker(valueFormatter = paceMarkerFormatter)
+    val marker = ChartDefaults.rememberMarker(
+        valueFormatter = paceMarkerFormatter,
+        guidelineColor = lineColor,
+    )
     val markerVisibilityListener = ChartDefaults.rememberHapticMarkerVisibilityListener()
 
     Column(modifier = modifier.fillMaxWidth()) {
