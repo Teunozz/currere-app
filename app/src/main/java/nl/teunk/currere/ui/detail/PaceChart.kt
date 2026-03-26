@@ -1,5 +1,8 @@
 package nl.teunk.currere.ui.detail
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +28,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import nl.teunk.currere.R
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
@@ -34,6 +41,8 @@ import com.patrykandpatrick.vico.compose.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.LineCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.common.Fill
@@ -117,6 +126,26 @@ fun PaceChart(
         }
     }
 
+    val paceMarkerFormatter = remember(lineColor) {
+        DefaultCartesianMarker.ValueFormatter { _, targets ->
+            val target = targets.firstOrNull() as? LineCartesianLayerMarkerTarget
+                ?: return@ValueFormatter ""
+            val point = target.points.firstOrNull() ?: return@ValueFormatter ""
+            val paceSeconds = abs(point.entry.y).toLong()
+            val min = paceSeconds / 60
+            val sec = paceSeconds % 60
+            val time = StatsAggregator.formatDuration(Duration.ofSeconds(point.entry.x.toLong()))
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = lineColor, fontWeight = FontWeight.Bold)) {
+                    append("$min:${"%02d".format(sec)} /km")
+                }
+                append(" at $time")
+            }
+        }
+    }
+    val marker = ChartDefaults.rememberMarker(valueFormatter = paceMarkerFormatter)
+    val markerVisibilityListener = ChartDefaults.rememberHapticMarkerVisibilityListener()
+
     Column(modifier = modifier.fillMaxWidth()) {
         // Header
         Row(
@@ -153,55 +182,66 @@ fun PaceChart(
 
         Spacer(Modifier.height(8.dp))
 
-        // Chart
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                rememberLineCartesianLayer(
-                    lineProvider = LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.rememberLine(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(lineColor)) },
-                            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 2.dp),
-                            areaFill = LineCartesianLayer.AreaFill.single(
-                                Fill(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            lineColor.copy(alpha = 0.4f),
-                                            lineColor.copy(alpha = 0f),
+        // Chart – custom long-press timeout for faster marker activation
+        val viewConfig = LocalViewConfiguration.current
+        val chartViewConfig = remember(viewConfig) {
+            object : ViewConfiguration by viewConfig {
+                override val longPressTimeoutMillis get() = ChartDefaults.LONG_PRESS_TIMEOUT_MS
+            }
+        }
+        CompositionLocalProvider(LocalViewConfiguration provides chartViewConfig) {
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(
+                                fill = remember { LineCartesianLayer.LineFill.single(Fill(lineColor)) },
+                                stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 2.dp),
+                                areaFill = LineCartesianLayer.AreaFill.single(
+                                    Fill(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                lineColor.copy(alpha = 0.4f),
+                                                lineColor.copy(alpha = 0f),
+                                            )
                                         )
-                                    )
+                                    ),
+                                    splitY = { chartData.splitYValue },
                                 ),
-                                splitY = { chartData.splitYValue },
+                            ),
+                            // Avg line – invisible
+                            LineCartesianLayer.rememberLine(
+                                fill = remember { LineCartesianLayer.LineFill.single(Fill(Color.Transparent)) },
+                                stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.dp),
                             ),
                         ),
-                        // Avg line – invisible
-                        LineCartesianLayer.rememberLine(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(Color.Transparent)) },
-                            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 0.dp),
-                        ),
+                        rangeProvider = rangeProvider,
                     ),
-                    rangeProvider = rangeProvider,
+                    endAxis = VerticalAxis.rememberEnd(
+                        label = axisLabel,
+                        valueFormatter = paceFormatter,
+                        guideline = gridLine,
+                        tick = null,
+                        line = null,
+                        itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
+                        size = ChartDefaults.yAxisSize,
+                    ),
+                    bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
+                    marker = marker,
+                    markerVisibilityListener = markerVisibilityListener,
+                    markerController = ChartDefaults.rememberShowOnLongPress(),
+                    getXStep = { 1.0 },
                 ),
-                endAxis = VerticalAxis.rememberEnd(
-                    label = axisLabel,
-                    valueFormatter = paceFormatter,
-                    guideline = gridLine,
-                    tick = null,
-                    line = null,
-                    itemPlacer = remember { VerticalAxis.ItemPlacer.count({ 3 }) },
-                    size = ChartDefaults.yAxisSize,
-                ),
-                bottomAxis = ChartDefaults.rememberBottomTimeAxis(labelSpacingMinutes),
-                getXStep = { 1.0 },
-            ),
-            model = model,
-            scrollState = rememberVicoScrollState(scrollEnabled = false),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .semantics {
-                    contentDescription = chartDescription
-                },
-        )
+                model = model,
+                scrollState = rememberVicoScrollState(scrollEnabled = false),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .semantics {
+                        contentDescription = chartDescription
+                    },
+            )
+        }
     }
 }
 

@@ -1,17 +1,36 @@
 package nl.teunk.currere.ui.detail
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
+import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerVisibilityListener
+import com.patrykandpatrick.vico.compose.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.compose.cartesian.marker.Interaction
+import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.Insets
+import com.patrykandpatrick.vico.compose.common.LayeredComponent
+import com.patrykandpatrick.vico.compose.common.MarkerCornerBasedShape
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import nl.teunk.currere.ui.theme.TextSecondary
 
 internal object ChartDefaults {
@@ -75,4 +94,90 @@ internal object ChartDefaults {
             )
         },
     )
+
+    @Composable
+    fun rememberMarker(
+        valueFormatter: DefaultCartesianMarker.ValueFormatter,
+    ): DefaultCartesianMarker {
+        val labelBackground = rememberShapeComponent(
+            fill = Fill(Color.White),
+            shape = MarkerCornerBasedShape(
+                base = RoundedCornerShape(12.dp),
+                tickSize = 8.dp,
+            ),
+        )
+        val label = rememberTextComponent(
+            style = TextStyle(color = Color(0xFF555555), fontSize = 14.sp),
+            padding = Insets(horizontal = 12.dp, vertical = 8.dp),
+            background = labelBackground,
+        )
+        val guideline = rememberLineComponent(
+            fill = Fill(TextSecondary.copy(alpha = 0.4f)),
+            thickness = 1.dp,
+        )
+        return rememberDefaultCartesianMarker(
+            label = label,
+            valueFormatter = valueFormatter,
+            labelPosition = DefaultCartesianMarker.LabelPosition.Top,
+            indicator = { color ->
+                LayeredComponent(
+                    back = ShapeComponent(fill = Fill(color.copy(alpha = 0.3f)), shape = CircleShape),
+                    front = ShapeComponent(fill = Fill(color), shape = CircleShape),
+                    padding = Insets(all = 3.dp),
+                )
+            },
+            indicatorSize = 14.dp,
+            guideline = guideline,
+        )
+    }
+
+    const val LONG_PRESS_TIMEOUT_MS = 100L
+
+    @Composable
+    fun rememberShowOnLongPress(): CartesianMarkerController = remember {
+        object : CartesianMarkerController {
+            private var isActive = false
+
+            override val acceptsLongPress = true
+            override val consumeMoveEvents get() = isActive
+            override val lock = CartesianMarkerController.Lock.Position
+
+            override fun shouldAcceptInteraction(
+                interaction: Interaction,
+                targets: List<CartesianMarker.Target>,
+            ) = when (interaction) {
+                is Interaction.LongPress -> { isActive = true; true }
+                is Interaction.Move -> isActive
+                is Interaction.Release -> { isActive = false; true }
+                else -> false
+            }
+
+            override fun shouldShowMarker(
+                interaction: Interaction,
+                targets: List<CartesianMarker.Target>,
+            ) = interaction !is Interaction.Release
+        }
+    }
+
+    @Composable
+    fun rememberHapticMarkerVisibilityListener(): CartesianMarkerVisibilityListener {
+        val haptic = LocalHapticFeedback.current
+        return remember {
+            object : CartesianMarkerVisibilityListener {
+                override fun onShown(
+                    marker: CartesianMarker,
+                    targets: List<CartesianMarker.Target>,
+                ) {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+
+                override fun onUpdated(
+                    marker: CartesianMarker,
+                    targets: List<CartesianMarker.Target>,
+                ) {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                }
+            }
+        }
+    }
 }
