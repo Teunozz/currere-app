@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import nl.teunk.currere.R
 import nl.teunk.currere.ui.theme.CurrereTheme
+import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.DistanceRecord
@@ -73,7 +74,7 @@ fun PermissionScreen(
     PermissionScreenContent(
         permissionDenied = permissionDenied,
         onOpenSettings = {
-            val intent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
+            val intent = Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS)
             context.startActivity(intent)
         },
         onTryAgain = { permissionLauncher.launch(HEALTH_PERMISSIONS) },
